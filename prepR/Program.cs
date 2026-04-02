@@ -67,7 +67,11 @@ rootCommand.SetAction((ParseResult parse) =>
     if (runOptions.UseCache)
         cache = ScanCache.Load(path.FullName);
 
-    var result = RuleChecker.Run(files, runOptions.Threshold, progressWriter, cache);
+    var safeMagicNumbers = config.SafeMagicNumbers is not null
+        ? new HashSet<string>(config.SafeMagicNumbers)
+        : null;
+
+    var result = RuleChecker.Run(files, runOptions.Threshold, progressWriter, cache, safeMagicNumbers);
 
     if (runOptions.UseCache)
         cache?.Save(path.FullName);

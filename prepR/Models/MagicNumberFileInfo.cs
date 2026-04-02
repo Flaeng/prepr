@@ -9,19 +9,28 @@ public record MagicNumberFileInfo(string FilePath, IReadOnlyList<MagicNumberViol
         if (options.MagicNumberRule is null)
             return violations;
 
+        var minRepeat = options.MinMagicNumberRepeat;
+
         foreach (var (filePath, fileViolations) in result.MagicNumberViolations)
         {
             var limit = options.MagicNumberRule.GetLimit(filePath, rootPath);
             if (limit is null)
                 continue;
 
-            if (fileViolations.Count > limit.Value)
+            // Only include magic numbers that appear at least minRepeat times
+            var repeatedNumbers = fileViolations
+                .GroupBy(v => v.Value)
+                .Where(g => g.Count() >= minRepeat)
+                .SelectMany(g => g)
+                .ToList();
+
+            if (repeatedNumbers.Count > limit.Value)
             {
-                int overage = fileViolations.Count - limit.Value;
+                int overage = repeatedNumbers.Count - limit.Value;
                 var severity = overage >= limit.Value + 10 ? Severity.High
                              : overage >= limit.Value + 5 ? Severity.Medium
                              : Severity.Low;
-                violations.Add(new MagicNumberFileInfo(filePath, fileViolations, limit.Value, severity));
+                violations.Add(new MagicNumberFileInfo(filePath, repeatedNumbers, limit.Value, severity));
             }
         }
 

@@ -130,7 +130,6 @@ public class MagicStringTests
             ["/root/a.cs"] = new List<MagicStringViolation>
             {
                 new(1, "hello", "var x = \"hello\";"),
-                new(5, "hello", "var y = \"hello\";"),
             }
         };
         var result = new ScanResult([], 1, 100,

@@ -65,14 +65,23 @@ public class PreprConfig
     [JsonPropertyName("techDebtWeightCommentDensity")]
     public int? TechDebtWeightCommentDensity { get; set; }
 
+    [JsonPropertyName("safeMagicNumbers")]
+    public string[]? SafeMagicNumbers { get; set; }
+
     [JsonPropertyName("maxMagicNumbers")]
     public Dictionary<string, int>? MaxMagicNumbers { get; set; }
+
+    [JsonPropertyName("minMagicNumberRepeat")]
+    public int? MinMagicNumberRepeat { get; set; }
 
     [JsonPropertyName("techDebtWeightMagicNumber")]
     public int? TechDebtWeightMagicNumber { get; set; }
 
     [JsonPropertyName("maxMagicStrings")]
     public Dictionary<string, int>? MaxMagicStrings { get; set; }
+
+    [JsonPropertyName("minMagicStringRepeat")]
+    public int? MinMagicStringRepeat { get; set; }
 
     [JsonPropertyName("techDebtWeightMagicString")]
     public int? TechDebtWeightMagicString { get; set; }
@@ -102,9 +111,12 @@ public class PreprConfig
         MinCommentDensity = null,
         MaxCommentDensity = new Dictionary<string, int> { { "*", 2 } },
         TechDebtWeightCommentDensity = 20,
+        SafeMagicNumbers = ["0", "1", "2", "100"],
         MaxMagicNumbers = new Dictionary<string, int> { { "*", 2 } },
+        MinMagicNumberRepeat = 2,
         TechDebtWeightMagicNumber = 8,
         MaxMagicStrings = new Dictionary<string, int> { { "*", 2 } },
+        MinMagicStringRepeat = 2,
         TechDebtWeightMagicString = 8,
         MaxTechDebtScore = null
     }, new JsonSerializerOptions { WriteIndented = true });

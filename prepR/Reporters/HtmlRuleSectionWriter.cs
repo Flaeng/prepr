@@ -135,11 +135,7 @@ internal static class HtmlRuleSectionWriter
                 if (codeSnippets.Count > 0)
                 {
                     writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="6" class="px-6 py-3" style="max-width:0"><pre class="code-block p-4 rounded-lg font-mono text-xs text-secondary leading-relaxed overflow-x-auto border border-outline-variant/10"><code>""");
-                    foreach (var (lineNum, line) in codeSnippets)
-                    {
-                        var highlight = overLimitLines.Contains(lineNum) ? " style=\"background:rgba(255,111,126,.2);border-left:3px solid #ff6f7e\"" : "";
-                        writer.WriteLine($"<span{highlight}><span class=\"text-on-surface-variant/50\">{lineNum,4} │ </span>{WebUtility.HtmlEncode(line)}</span>");
-                    }
+                    WriteSnippetLines(writer, codeSnippets, overLimitLines);
                     writer.Write("""</code></pre></td></tr>""");
                 }
             }
@@ -246,6 +242,19 @@ internal static class HtmlRuleSectionWriter
             </div>
             </details>
             """);
+    }
+
+    private static void WriteSnippetLines(TextWriter writer, List<(int LineNumber, string Line)> snippetLines, HashSet<int> highlightLines)
+    {
+        int? prevLineNum = null;
+        foreach (var (lineNum, line) in snippetLines)
+        {
+            if (prevLineNum is not null && lineNum > prevLineNum.Value + 1)
+                writer.WriteLine("<span class=\"text-on-surface-variant/30\">   ⋮</span>");
+            prevLineNum = lineNum;
+            var highlight = highlightLines.Contains(lineNum) ? " style=\"background:rgba(255,111,126,.2);border-left:3px solid #ff6f7e\"" : "";
+            writer.WriteLine($"<span{highlight}><span class=\"text-on-surface-variant/50\">{lineNum,4} \u2502 </span>{WebUtility.HtmlEncode(line)}</span>");
+        }
     }
 
     private static List<(int LineNumber, string Line)>? ReadCodeSnippet(string filePath, int targetLine, int contextLines)
@@ -377,12 +386,25 @@ internal static class HtmlRuleSectionWriter
                 var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
                 var prompt = WebUtility.HtmlEncode(file.GetPrompt(relativePath));
                 var codeId = $"magic-number-{i}";
-                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{file.Violations.Count}</td><td class="px-6 py-4 text-right text-on-surface-variant">{file.Limit}</td>{SeverityCell(file.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show details</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
+                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{file.Violations.Count}</td><td class="px-6 py-4 text-right text-on-surface-variant">{file.Limit}</td>{SeverityCell(file.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show code</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
 
-                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3"><div class="space-y-1">""");
-                foreach (var v in file.Violations)
+                // Group violations by value, ordered by count descending
+                var groupedByValue = file.Violations
+                    .GroupBy(v => v.Value)
+                    .OrderByDescending(g => g.Count())
+                    .ToList();
+
+                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3" style="max-width:0"><div class="space-y-4">""");
+                foreach (var group in groupedByValue)
                 {
-                    writer.WriteLine($"""<div class="text-xs"><span class="text-on-surface-variant">Line {v.LineNumber}:</span> <span class="font-mono text-tertiary">{WebUtility.HtmlEncode(v.Value)}</span></div>""");
+                    var violationLines = new HashSet<int>(group.Select(v => v.LineNumber));
+                    var allSnippetLines = group.OrderBy(v => v.LineNumber)
+                        .SelectMany(v => ReadCodeSnippet(file.FilePath, v.LineNumber, contextLines: 2) ?? [])
+                        .DistinctBy(s => s.LineNumber)
+                        .ToList();
+                    writer.Write($"""<div><p class="text-xs font-bold text-tertiary mb-2">{WebUtility.HtmlEncode(group.Key)} <span class="text-on-surface-variant font-normal">({group.Count()} times)</span></p><pre class="code-block p-4 rounded-lg font-mono text-xs text-secondary leading-relaxed overflow-x-auto border border-outline-variant/10"><code>""");
+                    WriteSnippetLines(writer, allSnippetLines, violationLines);
+                    writer.Write("</code></pre></div>");
                 }
                 writer.Write("</div></td></tr>");
             }
@@ -447,12 +469,26 @@ internal static class HtmlRuleSectionWriter
                 var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
                 var prompt = WebUtility.HtmlEncode(file.GetPrompt(relativePath));
                 var codeId = $"magic-string-{i}";
-                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{file.Violations.Count}</td><td class="px-6 py-4 text-right text-on-surface-variant">{file.Limit}</td>{SeverityCell(file.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show details</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
+                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{file.Violations.Count}</td><td class="px-6 py-4 text-right text-on-surface-variant">{file.Limit}</td>{SeverityCell(file.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show code</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
 
-                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3"><div class="space-y-1">""");
-                foreach (var v in file.Violations)
+                // Group violations by value, ordered by count descending
+                var groupedByValue = file.Violations
+                    .GroupBy(v => v.Value)
+                    .OrderByDescending(g => g.Count())
+                    .ToList();
+
+                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3" style="max-width:0"><div class="space-y-4">""");
+                foreach (var group in groupedByValue)
                 {
-                    writer.WriteLine($"""<div class="text-xs"><span class="text-on-surface-variant">Line {v.LineNumber}:</span> <span class="font-mono text-tertiary">"{WebUtility.HtmlEncode(v.Value)}"</span></div>""");
+                    var truncatedValue = group.Key.Length > 80 ? group.Key[..77] + "..." : group.Key;
+                    var violationLines = new HashSet<int>(group.Select(v => v.LineNumber));
+                    var allSnippetLines = group.OrderBy(v => v.LineNumber)
+                        .SelectMany(v => ReadCodeSnippet(file.FilePath, v.LineNumber, contextLines: 2) ?? [])
+                        .DistinctBy(s => s.LineNumber)
+                        .ToList();
+                    writer.Write($"""<div><p class="text-xs font-bold text-tertiary mb-2">"{WebUtility.HtmlEncode(truncatedValue)}" <span class="text-on-surface-variant font-normal">({group.Count()} times)</span></p><pre class="code-block p-4 rounded-lg font-mono text-xs text-secondary leading-relaxed overflow-x-auto border border-outline-variant/10"><code>""");
+                    WriteSnippetLines(writer, allSnippetLines, violationLines);
+                    writer.Write("</code></pre></div>");
                 }
                 writer.Write("</div></td></tr>");
             }

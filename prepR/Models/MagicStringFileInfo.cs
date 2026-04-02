@@ -9,22 +9,24 @@ public record MagicStringFileInfo(string FilePath, IReadOnlyList<MagicStringViol
         if (options.MagicStringRule is null)
             return violations;
 
+        var minRepeat = options.MinMagicStringRepeat;
+
         foreach (var (filePath, fileViolations) in result.MagicStringViolations)
         {
             var limit = options.MagicStringRule.GetLimit(filePath, rootPath);
             if (limit is null)
                 continue;
 
-            // Group by string value; only flag strings that appear more than the limit
+            // Group by string value; only flag strings that appear at least minRepeat times
             var repeatedStrings = fileViolations
                 .GroupBy(v => v.Value)
-                .Where(g => g.Count() > limit.Value)
+                .Where(g => g.Count() >= minRepeat)
                 .SelectMany(g => g)
                 .ToList();
 
             if (repeatedStrings.Count > 0)
             {
-                int distinctRepeated = fileViolations.GroupBy(v => v.Value).Count(g => g.Count() > limit.Value);
+                int distinctRepeated = fileViolations.GroupBy(v => v.Value).Count(g => g.Count() >= minRepeat);
                 var severity = distinctRepeated >= 10 ? Severity.High
                              : distinctRepeated >= 5 ? Severity.Medium
                              : Severity.Low;

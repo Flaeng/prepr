@@ -9,9 +9,10 @@ public static partial class RuleChecker
 
     public static ScanResult Run(IReadOnlyList<string> filePaths, int minConsecutiveLines = DefaultMinConsecutiveLines,
         TextWriter? progressWriter = null,
-        ScanCache? cache = null)
+        ScanCache? cache = null,
+        HashSet<string>? safeMagicNumbers = null)
     {
-        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, totalLines) = ReadFiles(filePaths, progressWriter, cache);
+        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, totalLines) = ReadFiles(filePaths, progressWriter, cache, safeMagicNumbers);
         var duplicates = DuplicateDetector.Detect(fileLines, minConsecutiveLines, progressWriter);
         return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations);
     }
@@ -19,7 +20,8 @@ public static partial class RuleChecker
     private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, NestingDepthInfo> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, IReadOnlyDictionary<string, int> fileCommentLineCounts, IReadOnlyDictionary<string, IReadOnlyList<MagicNumberViolation>> magicNumberViolations, IReadOnlyDictionary<string, IReadOnlyList<MagicStringViolation>> magicStringViolations, int totalLines)
         ReadFiles(IReadOnlyList<string> filePaths,
             TextWriter? progressWriter,
-            ScanCache? cache)
+            ScanCache? cache,
+            HashSet<string>? safeMagicNumbers)
     {
         var fileLines = new ConcurrentDictionary<string, IndexedLine[]>();
         var fileLineCounts = new ConcurrentDictionary<string, int>();
@@ -38,7 +40,7 @@ public static partial class RuleChecker
 
         Parallel.ForEach(filePaths, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, path =>
         {
-            ReadSingleFile(path, cache, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations);
+            ReadSingleFile(path, cache, safeMagicNumbers, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations);
 
             int current = Interlocked.Increment(ref filesRead);
             bar?.Update(current, "Reading files...");
@@ -49,7 +51,7 @@ public static partial class RuleChecker
         return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, totalLines);
     }
 
-    private static void ReadSingleFile(string path, ScanCache? cache, ref int totalLines,
+    private static void ReadSingleFile(string path, ScanCache? cache, HashSet<string>? safeMagicNumbers, ref int totalLines,
         ConcurrentDictionary<string, IndexedLine[]> fileLines,
         ConcurrentDictionary<string, int> fileLineCounts,
         ConcurrentDictionary<string, NestingDepthInfo> fileMaxNestingDepths,
@@ -86,7 +88,7 @@ public static partial class RuleChecker
             fileMaxNestingDepths[path] = ComputeMaxNestingDepth(indexed);
             earlyReturnViolations[path] = EarlyReturnAnalyzer.Analyze(indexed);
             fileCommentLineCounts[path] = CountCommentLines(indexed);
-            magicNumberViolations[path] = FindMagicNumbers(indexed);
+            magicNumberViolations[path] = FindMagicNumbers(indexed, safeMagicNumbers);
             magicStringViolations[path] = FindMagicStrings(indexed);
         }
         catch (UnauthorizedAccessException)
@@ -246,14 +248,22 @@ public static partial class RuleChecker
     [GeneratedRegex(@"(?<!\w)(?:(?:0[xX][0-9a-fA-F]+)|(?:0[bB][01]+)|(?:\d+\.\d+)|(?:\d+))(?:[fFdDmMlLuU]*)(?!\w)", RegexOptions.Compiled)]
     private static partial Regex MagicNumberRegex();
 
-    internal static IReadOnlyList<MagicNumberViolation> FindMagicNumbers(IndexedLine[] lines)
+    internal static IReadOnlyList<MagicNumberViolation> FindMagicNumbers(IndexedLine[] lines, HashSet<string>? safeMagicNumbers = null)
     {
         var violations = new List<MagicNumberViolation>();
         bool inBlockComment = false;
+        bool inRawString = false;
 
         foreach (var line in lines)
         {
             var trimmed = line.Text.TrimStart();
+
+            if (inRawString)
+            {
+                if (trimmed.Contains("\"\"\""))
+                    inRawString = false;
+                continue;
+            }
 
             if (inBlockComment)
             {
@@ -273,14 +283,31 @@ public static partial class RuleChecker
                 continue;
             }
 
-            foreach (Match match in MagicNumberRegex().Matches(line.Text))
+            // Check for raw string literal start (""", $""", $$""", @""", etc.)
+            if (line.Text.Contains("\"\"\""))
             {
-                violations.Add(new MagicNumberViolation(line.LineNumber, match.Value, trimmed));
+                var idx = line.Text.IndexOf("\"\"\"");
+                var afterOpen = line.Text[(idx + 3)..];
+                if (!afterOpen.Contains("\"\"\""))
+                    inRawString = true;
+                continue;
+            }
+
+            var textWithoutStrings = StringLiteralRegex().Replace(line.Text, "\"\"");
+            foreach (Match match in MagicNumberRegex().Matches(textWithoutStrings))
+            {
+                var rawValue = match.Value;
+                // Strip type suffixes (e.g. 42L, 3.14f) for safe-number comparison
+                var numericValue = rawValue.TrimEnd('f', 'F', 'd', 'D', 'm', 'M', 'l', 'L', 'u', 'U');
+                if (safeMagicNumbers is not null && safeMagicNumbers.Contains(numericValue))
+                    continue;
+                violations.Add(new MagicNumberViolation(line.LineNumber, rawValue, trimmed));
             }
         }
 
         return violations;
     }
+
 
     [GeneratedRegex(@"""([^""\\]*(?:\\.[^""\\]*)*)""", RegexOptions.Compiled)]
     private static partial Regex StringLiteralRegex();
