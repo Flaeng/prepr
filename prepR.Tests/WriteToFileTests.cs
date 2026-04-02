@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace prepR.Tests;
+namespace prepr.Tests;
 
 public class WriteToFileTests
 {
@@ -35,8 +35,8 @@ public class WriteToFileTests
     private static string GetProjectPath()
     {
         var dir = AppContext.BaseDirectory;
-        while (dir != null && !File.Exists(Path.Combine(dir, "prepR.Tests.csproj")))
+        while (dir != null && !File.Exists(Path.Combine(dir, "prepr.Tests.csproj")))
             dir = Path.GetDirectoryName(dir);
-        return Path.Combine(Path.GetDirectoryName(dir!)!, "prepR", "prepR.csproj");
+        return Path.Combine(Path.GetDirectoryName(dir!)!, "prepr", "prepr.csproj");
     }
 }

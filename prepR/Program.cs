@@ -1,10 +1,10 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 
-using PrepR;
-using static PrepR.CliSymbols;
+using prepr;
+using static prepr.CliSymbols;
 
-var rootCommand = new RootCommand("prepR \u2014 Detect duplicated code blocks across files in a folder.")
+var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks across files in a folder.")
 {
     PathArgument,
     ExtensionsOption,

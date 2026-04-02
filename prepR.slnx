@@ -4,6 +4,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="prepR/prepR.csproj" />
-  <Project Path="prepR.Tests/prepR.Tests.csproj" />
+  <Project Path="prepr/prepr.csproj" />
+  <Project Path="prepr.Tests/prepr.Tests.csproj" />
 </Solution>

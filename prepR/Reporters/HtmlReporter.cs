@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace PrepR;
+namespace prepr;
 
 public class HtmlReporter : IReporter
 {
@@ -13,7 +13,7 @@ public class HtmlReporter : IReporter
         writer.WriteLine("<head>");
         writer.WriteLine("<meta charset=\"UTF-8\">");
         writer.WriteLine("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-        writer.WriteLine("<title>prepR — Duplicate Block Report</title>");
+        writer.WriteLine("<title>prepr — Duplicate Block Report</title>");
         writer.WriteLine("<style>");
         writer.WriteLine("""
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 2rem; background: #1e1e2e; color: #cdd6f4; }
@@ -43,7 +43,7 @@ public class HtmlReporter : IReporter
         writer.WriteLine("</head>");
         writer.WriteLine("<body>");
 
-        writer.WriteLine("<h1>prepR — Duplicate Block Report</h1>");
+        writer.WriteLine("<h1>prepr — Duplicate Block Report</h1>");
         writer.WriteLine("<div class=\"stats\">");
         writer.WriteLine($"<span><strong>Files scanned:</strong> {result.TotalFilesScanned}</span>");
         writer.WriteLine($"<span><strong>Total lines:</strong> {result.TotalLinesScanned}</span>");

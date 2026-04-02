@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace PrepR;
+namespace prepr;
 
 public static class ReportWriter
 {

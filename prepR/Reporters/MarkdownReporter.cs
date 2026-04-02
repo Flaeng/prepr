@@ -1,4 +1,4 @@
-namespace PrepR;
+namespace prepr;
 
 public class MarkdownReporter : IReporter
 {
@@ -6,7 +6,7 @@ public class MarkdownReporter : IReporter
     {
         var stats = SummaryStatistics.Compute(result);
 
-        writer.WriteLine("# prepR — Duplicate Block Report");
+        writer.WriteLine("# prepr — Duplicate Block Report");
         writer.WriteLine();
         writer.WriteLine($"- **Files scanned:** {result.TotalFilesScanned}");
         writer.WriteLine($"- **Total lines:** {result.TotalLinesScanned}");

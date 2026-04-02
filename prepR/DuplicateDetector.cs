@@ -1,4 +1,4 @@
-namespace PrepR;
+namespace prepr;
 
 public static class DuplicateDetector
 {

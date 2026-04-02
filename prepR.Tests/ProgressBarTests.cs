@@ -1,6 +1,6 @@
-using PrepR;
+using prepr;
 
-namespace PrepR.Tests;
+namespace prepr.Tests;
 
 public class ProgressBarTests
 {

@@ -1,6 +1,6 @@
-using PrepR;
+using prepr;
 
-namespace prepR.Tests;
+namespace prepr.Tests;
 
 public class MarkdownReporterTests
 {
@@ -23,7 +23,7 @@ public class MarkdownReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("# prepR — Duplicate Block Report", output);
+        Assert.Contains("# prepr — Duplicate Block Report", output);
     }
 
     [Fact]

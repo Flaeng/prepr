@@ -481,6 +481,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# PrepR
+# prepr
 .prepr-cache
 reports

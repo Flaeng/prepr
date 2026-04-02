@@ -1,4 +1,4 @@
-namespace PrepR;
+namespace prepr;
 
 public record FilePairGroup(
     string FileA,

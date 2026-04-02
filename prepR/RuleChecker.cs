@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace PrepR;
+namespace prepr;
 
 public static class RuleChecker
 {

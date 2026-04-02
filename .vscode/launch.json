@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run prepR",
+            "name": "Run prepr",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/prepR/bin/Debug/net10.0/prepR.dll",
-            "args": ["${workspaceFolder}/prepR"],
+            "program": "${workspaceFolder}/prepr/bin/Debug/net10.0/prepr.dll",
+            "args": ["${workspaceFolder}/prepr"],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "stopAtEntry": false

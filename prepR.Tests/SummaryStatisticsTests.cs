@@ -1,6 +1,6 @@
-using PrepR;
+using prepr;
 
-namespace prepR.Tests;
+namespace prepr.Tests;
 
 public class SummaryStatisticsTests
 {

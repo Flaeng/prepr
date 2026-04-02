@@ -1,6 +1,6 @@
-using PrepR;
+using prepr;
 
-namespace prepR.Tests;
+namespace prepr.Tests;
 
 public class HtmlReporterTests
 {
@@ -38,7 +38,7 @@ public class HtmlReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("<title>prepR — Duplicate Block Report</title>", output);
+        Assert.Contains("<title>prepr — Duplicate Block Report</title>", output);
     }
 
     [Fact]

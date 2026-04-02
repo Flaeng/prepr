@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace PrepR;
+namespace prepr;
 
-public class PrepRConfig
+public class preprConfig
 {
     [JsonPropertyName("output")]
     public string[]? Output { get; set; }
@@ -38,7 +38,7 @@ public class PrepRConfig
     [JsonPropertyName("maxFileLines")]
     public Dictionary<string, int>? MaxFileLines { get; set; }
 
-    public static readonly string DefaultConfigJson = JsonSerializer.Serialize(new PrepRConfig
+    public static readonly string DefaultConfigJson = JsonSerializer.Serialize(new preprConfig
     {
         Output = ["console", "html", "md", "csv", "prompt"],
         OutputFile = "report.prepr",
@@ -58,22 +58,22 @@ public static class ConfigLoader
 {
     public const string ConfigFileName = ".preprrc";
 
-    public static PrepRConfig LoadConfig(string startDirectory)
+    public static preprConfig LoadConfig(string startDirectory)
     {
         var configPath = FindConfigFile(startDirectory);
         if (configPath is null)
-            return new PrepRConfig();
+            return new preprConfig();
 
         try
         {
             var json = File.ReadAllText(configPath);
-            var config = JsonSerializer.Deserialize<PrepRConfig>(json, new JsonSerializerOptions
+            var config = JsonSerializer.Deserialize<preprConfig>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
             if (config is null)
-                return new PrepRConfig();
+                return new preprConfig();
 
             if (config.Threshold is <= 0)
             {
@@ -119,7 +119,7 @@ public static class ConfigLoader
         catch (JsonException ex)
         {
             Console.Error.WriteLine($"Warning: Invalid JSON in '{configPath}': {ex.Message}. Using defaults.");
-            return new PrepRConfig();
+            return new preprConfig();
         }
     }
 

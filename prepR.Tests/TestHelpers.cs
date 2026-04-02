@@ -1,4 +1,4 @@
-namespace prepR.Tests;
+namespace prepr.Tests;
 
 /// <summary>
 /// Creates a temporary directory tree with files of known content for testing.
@@ -10,7 +10,7 @@ public sealed class TempFileTree : IDisposable
 
     public TempFileTree()
     {
-        RootPath = Path.Combine(Path.GetTempPath(), "prepR_test_" + Guid.NewGuid().ToString("N")[..8]);
+        RootPath = Path.Combine(Path.GetTempPath(), "prepr_test_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(RootPath);
     }
 

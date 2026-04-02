@@ -1,4 +1,4 @@
-namespace PrepR;
+namespace prepr;
 
 public class ConsoleReporter : IReporter
 {
@@ -19,7 +19,7 @@ public class ConsoleReporter : IReporter
         }
 
         Console.WriteLine();
-        WriteLine("prepR — Duplicate Block Report", ConsoleColor.White);
+        WriteLine("prepr — Duplicate Block Report", ConsoleColor.White);
         WriteLine($"Scanned: {result.TotalFilesScanned} files, {result.TotalLinesScanned} total lines", ConsoleColor.Gray);
         WriteLine($"Found:   {stats.TotalDuplicateBlocks} duplicate block(s), {stats.TotalDuplicatedLines} duplicated line(s)", ConsoleColor.Gray);
         if (stats.MostDuplicatedFile is not null)

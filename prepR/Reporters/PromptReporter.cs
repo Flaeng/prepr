@@ -1,4 +1,4 @@
-namespace PrepR;
+namespace prepr;
 
 public class PromptReporter : IReporter
 {

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="prepR.Tests" />
+    <InternalsVisibleTo Include="prepr.Tests" />
   </ItemGroup>
 
   <ItemGroup>

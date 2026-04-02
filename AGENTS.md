@@ -2,7 +2,7 @@
 
 ## Overview
 
-prepR is a .NET 10.0 CLI tool that detects and reports duplicated code blocks across files in a directory tree. It uses `System.CommandLine` for CLI parsing and supports multiple output formats (console, HTML, Markdown, CSV, prompt).
+prepr is a .NET 10.0 CLI tool that detects and reports duplicated code blocks across files in a directory tree. It uses `System.CommandLine` for CLI parsing and supports multiple output formats (console, HTML, Markdown, CSV, prompt).
 
 ## Architecture
 
@@ -29,9 +29,9 @@ prepR is a .NET 10.0 CLI tool that detects and reports duplicated code blocks ac
 ## Build and Test
 
 ```bash
-dotnet build prepR/prepR.csproj
-dotnet test prepR.Tests/prepR.Tests.csproj
-dotnet run --project prepR -- <path> [options]
+dotnet build prepr/prepr.csproj
+dotnet test prepr.Tests/prepr.Tests.csproj
+dotnet run --project prepr -- <path> [options]
 ```
 
 ## Conventions
@@ -41,4 +41,4 @@ dotnet run --project prepR -- <path> [options]
 - **Severity levels:** Low/Medium/High based on configurable duplication percentage thresholds
 - **Package versions** are centrally managed in `Directory.Packages.props`
 - **Shared build properties** live in `Directory.Build.props`
-- Tests use xUnit; each core component and reporter has a corresponding test file in `prepR.Tests/`
+- Tests use xUnit; each core component and reporter has a corresponding test file in `prepr.Tests/`

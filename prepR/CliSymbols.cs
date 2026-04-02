@@ -1,6 +1,6 @@
 using System.CommandLine;
 
-namespace PrepR;
+namespace prepr;
 
 public static class CliSymbols
 {

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 
-namespace PrepR;
+namespace prepr;
 
 public static class FileDiscovery
 {

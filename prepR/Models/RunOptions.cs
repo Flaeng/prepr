@@ -1,8 +1,8 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using static PrepR.CliSymbols;
+using static prepr.CliSymbols;
 
-namespace PrepR;
+namespace prepr;
 
 public record RunOptions(
     string[]? Extensions,
@@ -14,7 +14,7 @@ public record RunOptions(
     int? MaxDuplicates,
     bool UseCache)
 {
-    public static RunOptions Create(PrepRConfig config, ParseResult parse)
+    public static RunOptions Create(preprConfig config, ParseResult parse)
     {
         var extensions = parse.GetResult(ExtensionsOption) is not null
             ? parse.GetValue(ExtensionsOption) : config.IncludeExtensions;

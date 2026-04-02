@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace PrepR;
+namespace prepr;
 
 public class ScanCache
 {

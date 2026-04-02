@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\prepR\prepR.csproj" />
+    <ProjectReference Include="..\prepr\prepr.csproj" />
   </ItemGroup>
 
 </Project>
