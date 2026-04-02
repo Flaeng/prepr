@@ -56,7 +56,7 @@ public class MarkdownReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("## Per-file Summary", output);
+        Assert.Contains("### Per-file Summary", output);
         Assert.Contains("| File |", output);
     }
 
@@ -69,7 +69,7 @@ public class MarkdownReporterTests
         var output = writer.ToString();
 
         Assert.Contains("No duplicate blocks found.", output);
-        Assert.DoesNotContain("## Duplicate Blocks", output);
+        Assert.DoesNotContain("### Duplicate Blocks", output);
     }
 
     [Fact]
@@ -80,8 +80,37 @@ public class MarkdownReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("**Files scanned:** 5", output);
-        Assert.Contains("**Total lines:** 200", output);
-        Assert.Contains("**Duplicate blocks found:** 1", output);
+        Assert.Contains("| Files scanned | Total lines | Tech Debt Score |", output);
+        Assert.Contains("| 5 |", output);
+        Assert.Contains("| 200 |", output);
+    }
+
+    [Fact]
+    public void Report_ContainsSeverityCounts()
+    {
+        var reporter = new MarkdownReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("## Code Duplication (", output);
+        Assert.Contains("HIGH", output);
+        Assert.Contains("MEDIUM", output);
+        Assert.Contains("LOW", output);
+    }
+
+    [Fact]
+    public void Report_ContainsAllSections()
+    {
+        var reporter = new MarkdownReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("## Code Duplication", output);
+        Assert.Contains("## Line Count Overage", output);
+        Assert.Contains("## Indentation Overage", output);
+        Assert.Contains("## Early Return Opportunities", output);
+        Assert.Contains("## Tech Debt Score", output);
     }
 }

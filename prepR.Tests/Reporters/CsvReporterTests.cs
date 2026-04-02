@@ -19,9 +19,9 @@ public class CsvReporterTests
         var reporter = new CsvReporter();
         using var writer = new StringWriter();
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
-        var lines = writer.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        var output = writer.ToString();
 
-        Assert.Equal("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine", lines[0]);
+        Assert.Contains("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine", output);
     }
 
     [Fact]
@@ -31,12 +31,14 @@ public class CsvReporterTests
         using var writer = new StringWriter();
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
-        var blockLines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-            .TakeWhile(l => !l.StartsWith("File,"))
+        var lines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        var blockHeaderIndex = Array.IndexOf(lines, "BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine");
+        var dataLines = lines.Skip(blockHeaderIndex + 1)
+            .TakeWhile(l => l.Contains(',') && !l.StartsWith("File,"))
             .ToArray();
 
-        // 1 header + 2 data rows (one per location)
-        Assert.Equal(3, blockLines.Length);
+        // 2 data rows (one per location)
+        Assert.Equal(2, dataLines.Length);
     }
 
     [Fact]
@@ -46,28 +48,68 @@ public class CsvReporterTests
         using var writer = new StringWriter();
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
-        var blockLines = output.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
-            .TakeWhile(l => !l.StartsWith("File,"))
+        var blockSection = output.Split("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine")[1];
+        var dataLines = blockSection.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .TakeWhile(l => l.Contains(',') && !l.StartsWith("File,"))
             .ToArray();
 
         // Each block data row should have 6 columns
-        foreach (var line in blockLines)
+        foreach (var line in dataLines)
         {
             Assert.Equal(6, line.Split(',').Length);
         }
     }
 
     [Fact]
-    public void Report_NoDuplicates_OnlyHeaderRowAndScore()
+    public void Report_NoDuplicates_ContainsSummaryAndScore()
     {
         var reporter = new CsvReporter();
         using var writer = new StringWriter();
         reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>()), "/src", writer, new ReportOptions());
-        var lines = writer.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        var output = writer.ToString();
 
-        Assert.Equal(3, lines.Length);
-        Assert.StartsWith("BlockNumber", lines[0]);
-        Assert.Equal("TechDebtScore,Grade", lines[1]);
-        Assert.Equal("0.0,A", lines[2]);
+        Assert.Contains("FilesScanned,TotalLines,TechDebtScore,Grade", output);
+        Assert.Contains("3,100,", output);
+        Assert.Contains("Rule,High,Medium,Low", output);
+        Assert.Contains("TechDebtScore,Grade", output);
+        Assert.Contains("0.0,A", output);
+    }
+
+    [Fact]
+    public void Report_ContainsSummaryStats()
+    {
+        var reporter = new CsvReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("FilesScanned,TotalLines,TechDebtScore,Grade", output);
+        Assert.Contains("5,200,", output);
+    }
+
+    [Fact]
+    public void Report_ContainsSeverityCounts()
+    {
+        var reporter = new CsvReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("Rule,High,Medium,Low", output);
+        Assert.Contains("Duplication,", output);
+        Assert.Contains("LineLimit,", output);
+        Assert.Contains("Indentation,", output);
+        Assert.Contains("EarlyReturn,", output);
+    }
+
+    [Fact]
+    public void Report_WithDuplicates_ContainsFilePairs()
+    {
+        var reporter = new CsvReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("FileA,FileB,SharedBlocks,SharedLines", output);
     }
 }

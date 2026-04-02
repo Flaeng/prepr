@@ -19,10 +19,21 @@ public class ConsoleReporter : IReporter
             return;
         }
 
+        var techDebt = TechDebtScore.Compute(result, options, rootPath);
+        var gradeColor = techDebt.Grade switch
+        {
+            'A' or 'B' => ConsoleColor.Green,
+            'C' => ConsoleColor.Yellow,
+            _ => ConsoleColor.Red
+        };
+
         Console.WriteLine();
         WriteLine("prepr report", ConsoleColor.White);
-        WriteLine($"Scanned: {result.TotalFilesScanned} files, {result.TotalLinesScanned} total lines", ConsoleColor.Gray);
-        WriteLine($"Found:   {stats.TotalDuplicateBlocks} duplicate block(s), {stats.TotalDuplicatedLines} duplicated line(s)", ConsoleColor.Gray);
+        Write($"Scanned: {result.TotalFilesScanned} files, {result.TotalLinesScanned} total lines", ConsoleColor.Gray);
+        Write("  │  Tech Debt: ", ConsoleColor.DarkGray);
+        Write($"{techDebt.Score:F1}/100", gradeColor);
+        Write(" Grade: ", ConsoleColor.DarkGray);
+        WriteLine($"{techDebt.Grade}", gradeColor);
         Console.WriteLine(new string('─', 60));
 
         if (result.Duplicates.Count == 0)
@@ -35,13 +46,18 @@ public class ConsoleReporter : IReporter
 
         WriteDuplicates(result, rootPath);
 
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
+
         // Per-file summary with severity
         Console.WriteLine();
         Console.WriteLine(new string('─', 60));
-        WriteLine("Per-file Summary", ConsoleColor.White);
+        var highDup = fileInfos.Count(f => f.Severity == Severity.High);
+        var medDup = fileInfos.Count(f => f.Severity == Severity.Medium);
+        var lowDup = fileInfos.Count(f => f.Severity == Severity.Low);
+        Write("Per-file Summary", ConsoleColor.White);
+        WriteSeverityCounts(highDup, medDup, lowDup);
         Console.WriteLine();
 
-        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         foreach (var info in fileInfos)
         {
             var relativePath = Path.GetRelativePath(rootPath, info.FilePath);
@@ -95,7 +111,11 @@ public class ConsoleReporter : IReporter
             return;
 
         Console.WriteLine(new string('\u2500', 60));
-        WriteLine($"Files exceeding line limit ({overLimit.Count} file(s))", ConsoleColor.White);
+        var highLL = overLimit.Count(v => v.Severity == Severity.High);
+        var medLL = overLimit.Count(v => v.Severity == Severity.Medium);
+        var lowLL = overLimit.Count(v => v.Severity == Severity.Low);
+        Write($"Line Count Overage ({overLimit.Count} file(s))", ConsoleColor.White);
+        WriteSeverityCounts(highLL, medLL, lowLL);
         Console.WriteLine();
         foreach (var v in overLimit)
         {
@@ -120,7 +140,11 @@ public class ConsoleReporter : IReporter
         if (overIndented.Count > 0)
         {
             Console.WriteLine(new string('\u2500', 60));
-            WriteLine($"Files exceeding indentation limit ({overIndented.Count} file(s))", ConsoleColor.White);
+            var highInd = overIndented.Count(v => v.Severity == Severity.High);
+            var medInd = overIndented.Count(v => v.Severity == Severity.Medium);
+            var lowInd = overIndented.Count(v => v.Severity == Severity.Low);
+            Write($"Indentation Overage ({overIndented.Count} file(s))", ConsoleColor.White);
+            WriteSeverityCounts(highInd, medInd, lowInd);
             Console.WriteLine();
             foreach (var v in overIndented)
             {
@@ -148,7 +172,11 @@ public class ConsoleReporter : IReporter
 
         Console.WriteLine(new string('\u2500', 60));
         var totalViolations = violations.Sum(f => f.Violations.Count);
-        WriteLine($"Early return opportunities ({totalViolations} in {violations.Count} file(s))", ConsoleColor.White);
+        var highER = violations.Count(f => f.Severity == Severity.High);
+        var medER = violations.Count(f => f.Severity == Severity.Medium);
+        var lowER = violations.Count(f => f.Severity == Severity.Low);
+        Write($"Early Return Opportunities ({totalViolations} in {violations.Count} file(s))", ConsoleColor.White);
+        WriteSeverityCounts(highER, medER, lowER);
         Console.WriteLine();
         foreach (var file in violations)
         {
@@ -283,5 +311,15 @@ public class ConsoleReporter : IReporter
         Console.ForegroundColor = color;
         Console.WriteLine(text);
         Console.ForegroundColor = prev;
+    }
+
+    private static void WriteSeverityCounts(int high, int medium, int low)
+    {
+        Write("  ", ConsoleColor.DarkGray);
+        Write($"{high} HIGH", ConsoleColor.Red);
+        Write("  ", ConsoleColor.DarkGray);
+        Write($"{medium} MEDIUM", ConsoleColor.Yellow);
+        Write("  ", ConsoleColor.DarkGray);
+        WriteLine($"{low} LOW", ConsoleColor.Green);
     }
 }

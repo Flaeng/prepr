@@ -38,7 +38,7 @@ public class PromptReporter : IReporter
         if (highSeverity.Count > 0)
         {
             writer.WriteLine("""
-                ## Priority Files (High Duplication)");
+                ## Priority Files (High Duplication)
             
                 These files have the highest duplication and should be refactored first:
                 """);

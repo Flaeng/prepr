@@ -6,29 +6,70 @@ public class MarkdownReporter : IReporter
 
     public void Report(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
-        var stats = SummaryStatistics.Compute(result);
+        var score = TechDebtScore.Compute(result, options, rootPath);
 
         writer.WriteLine($"""
             # prepr report
 
-            - **Files scanned:** {result.TotalFilesScanned}
-            - **Total lines:** {result.TotalLinesScanned}
-            - **Duplicate blocks found:** {stats.TotalDuplicateBlocks}
-            - **Duplicated lines:** {stats.TotalDuplicatedLines}
+            | Files scanned | Total lines | Tech Debt Score |
+            |---------------|-------------|-----------------|
+            | {result.TotalFilesScanned} | {result.TotalLinesScanned} | {score.Score:F1}/100 — Grade: {score.Grade} |
 
+            """);
+
+        WriteDuplicationSection(result, rootPath, writer, options);
+
+        WriteLineLimitRule(result, rootPath, writer, options);
+
+        WriteIndentationRule(result, rootPath, writer, options);
+
+        WriteEarlyReturnRule(result, rootPath, writer, options);
+
+        WriteTechDebtScore(result, rootPath, writer, options);
+    }
+
+    private static string SeverityCounts(int high, int medium, int low) =>
+        $"({high} HIGH, {medium} MEDIUM, {low} LOW)";
+
+    private static void WriteDuplicationSection(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var stats = SummaryStatistics.Compute(result);
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
+        var highCount = fileInfos.Count(f => f.Severity == Severity.High);
+        var mediumCount = fileInfos.Count(f => f.Severity == Severity.Medium);
+        var lowCount = fileInfos.Count(f => f.Severity == Severity.Low);
+
+        writer.Write($"""
+
+            ---
+
+            ## Code Duplication {SeverityCounts(highCount, mediumCount, lowCount)}
             """);
 
         if (result.Duplicates.Count == 0)
         {
+            writer.WriteLine();
             writer.WriteLine("No duplicate blocks found.");
-            WriteTechDebtScore(result, rootPath, writer, options);
             return;
         }
 
-        writer.Write("""
-            ---
+        writer.WriteLine("""
 
-            ## Duplicate Blocks
+            ### Per-file Summary
+
+            | File | Blocks | Duplicated Lines | Duplication % | Severity |
+            |------|--------|------------------|---------------|----------|
+            """);
+
+        foreach (var info in fileInfos)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, info.FilePath);
+            writer.WriteLine($"| `{relativePath}` | {info.DuplicateBlockCount} | {info.DuplicatedLineCount} | {info.DuplicationPercentage:F1}% | {info.Severity} |");
+        }
+
+        writer.Write("""
+
+            ### Duplicate Blocks
             """);
 
         for (int i = 0; i < result.Duplicates.Count; i++)
@@ -36,7 +77,7 @@ public class MarkdownReporter : IReporter
             var block = result.Duplicates[i];
             writer.WriteLine($"""
 
-                ### Block #{i + 1} ({block.Lines.Length} lines, {block.Locations.Count} occurrences)
+                #### Block #{i + 1} ({block.Lines.Length} lines, {block.Locations.Count} occurrences)
 
                 ```
                 """);
@@ -60,58 +101,38 @@ public class MarkdownReporter : IReporter
             }
         }
 
-        writer.Write("""
-
-            ---
-
-            ## Per-file Summary
-
-            | File | Blocks | Duplicated Lines | Duplication % | Severity |
-            |------|--------|------------------|---------------|----------|
-            """);
-
-        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
-        foreach (var info in fileInfos)
-        {
-            var relativePath = Path.GetRelativePath(rootPath, info.FilePath);
-            writer.WriteLine($"| `{relativePath}` | {info.DuplicateBlockCount} | {info.DuplicatedLineCount} | {info.DuplicationPercentage:F1}% | {info.Severity} |");
-        }
-
-        // File pairs
         var pairs = FilePairGroup.ComputeFilePairs(result);
         if (pairs.Count > 0)
         {
-            WritePairs(rootPath, writer, options, pairs);
+            WritePairs(rootPath, writer, pairs);
         }
 
+        writer.WriteLine();
         writer.WriteLine($"**Total: {stats.TotalDuplicateBlocks} duplicate block(s) across {result.TotalFilesScanned} files**");
-
-        // Files exceeding line limit
-        WriteLineLimitRule(result, rootPath, writer, options);
-
-        // Files exceeding indentation limit
-        WriteIndentationRule(result, rootPath, writer, options);
-
-        // Early return violations
-        WriteEarlyReturnRule(result, rootPath, writer, options);
-
-        // Tech Debt Score
-        WriteTechDebtScore(result, rootPath, writer, options);
     }
 
     private static void WriteLineLimitRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
-        if (overLimit.Count <= 0)
-        {
-            return;
-        }
+        var highCount = overLimit.Count(v => v.Severity == Severity.High);
+        var mediumCount = overLimit.Count(v => v.Severity == Severity.Medium);
+        var lowCount = overLimit.Count(v => v.Severity == Severity.Low);
 
-        writer.Write("""
+        writer.Write($"""
 
             ---
 
-            ## Files Exceeding Line Limit
+            ## Line Count Overage {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (overLimit.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
 
             | File | Lines | Limit | Severity |
             |------|-------|-------|----------|
@@ -127,16 +148,25 @@ public class MarkdownReporter : IReporter
     private static void WriteIndentationRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
-        if (overIndented.Count <= 0)
-        {
-            return;
-        }
+        var highCount = overIndented.Count(v => v.Severity == Severity.High);
+        var mediumCount = overIndented.Count(v => v.Severity == Severity.Medium);
+        var lowCount = overIndented.Count(v => v.Severity == Severity.Low);
 
-        writer.Write("""
+        writer.Write($"""
 
             ---
 
-            ## Files Exceeding Indentation Limit
+            ## Indentation Overage {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (overIndented.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
 
             | File | Max Depth | Lines | Limit | Severity |
             |------|-----------|-------|-------|----------|
@@ -152,16 +182,25 @@ public class MarkdownReporter : IReporter
     private static void WriteEarlyReturnRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         var violations = EarlyReturnFileInfo.Compute(result, options);
-        if (violations.Count <= 0)
-        {
-            return;
-        }
+        var highCount = violations.Count(f => f.Severity == Severity.High);
+        var mediumCount = violations.Count(f => f.Severity == Severity.Medium);
+        var lowCount = violations.Count(f => f.Severity == Severity.Low);
 
-        writer.Write("""
+        writer.Write($"""
 
             ---
 
-            ## Early Return Opportunities
+            ## Early Return Opportunities {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
 
             | File | Line | Description | Severity |
             |------|------|-------------|----------|
@@ -191,13 +230,11 @@ public class MarkdownReporter : IReporter
             """);
     }
 
-    private static void WritePairs(string rootPath, TextWriter writer, ReportOptions options, List<FilePairGroup> pairs)
+    private static void WritePairs(string rootPath, TextWriter writer, List<FilePairGroup> pairs)
     {
-        writer.Write("""
+        writer.WriteLine("""
 
-            ---
-
-            ## File Pairs
+            ### File Pairs
 
             | File A | File B | Shared Blocks | Shared Lines |
             |--------|--------|---------------|--------------|

@@ -5,12 +5,31 @@ public class CsvReporter : IReporter
     public string FileExtension => ".csv";
     public void Report(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
-        writer.WriteLine("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine");
+        var score = TechDebtScore.Compute(result, options, rootPath);
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
+        var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
+        var pairs = FilePairGroup.ComputeFilePairs(result);
 
+        // Summary stats
+        writer.WriteLine("FilesScanned,TotalLines,TechDebtScore,Grade");
+        writer.WriteLine($"{result.TotalFilesScanned},{result.TotalLinesScanned},{score.Score.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{score.Grade}");
+
+        // Severity counts
+        writer.WriteLine();
+        writer.WriteLine("Rule,High,Medium,Low");
+        writer.WriteLine($"Duplication,{fileInfos.Count(f => f.Severity == Severity.High)},{fileInfos.Count(f => f.Severity == Severity.Medium)},{fileInfos.Count(f => f.Severity == Severity.Low)}");
+        writer.WriteLine($"LineLimit,{overLimit.Count(v => v.Severity == Severity.High)},{overLimit.Count(v => v.Severity == Severity.Medium)},{overLimit.Count(v => v.Severity == Severity.Low)}");
+        writer.WriteLine($"Indentation,{overIndented.Count(v => v.Severity == Severity.High)},{overIndented.Count(v => v.Severity == Severity.Medium)},{overIndented.Count(v => v.Severity == Severity.Low)}");
+        writer.WriteLine($"EarlyReturn,{earlyReturnViolations.Count(f => f.Severity == Severity.High)},{earlyReturnViolations.Count(f => f.Severity == Severity.Medium)},{earlyReturnViolations.Count(f => f.Severity == Severity.Low)}");
+
+        // Duplicate blocks
+        writer.WriteLine();
+        writer.WriteLine("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine");
         for (int i = 0; i < result.Duplicates.Count; i++)
         {
             var block = result.Duplicates[i];
-
             foreach (var loc in block.Locations)
             {
                 var relativePath = Path.GetRelativePath(rootPath, loc.FilePath);
@@ -19,7 +38,6 @@ public class CsvReporter : IReporter
         }
 
         // Per-file severity summary
-        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         if (fileInfos.Count > 0)
         {
             writer.WriteLine();
@@ -31,8 +49,20 @@ public class CsvReporter : IReporter
             }
         }
 
+        // File pairs
+        if (pairs.Count > 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("FileA,FileB,SharedBlocks,SharedLines");
+            foreach (var pair in pairs)
+            {
+                var relA = Path.GetRelativePath(rootPath, pair.FileA);
+                var relB = Path.GetRelativePath(rootPath, pair.FileB);
+                writer.WriteLine($"{CsvEscape(relA)},{CsvEscape(relB)},{pair.SharedBlocks.Count},{pair.SharedLineCount}");
+            }
+        }
+
         // Files exceeding line limit
-        var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
         if (overLimit.Count > 0)
         {
             writer.WriteLine();
@@ -45,7 +75,6 @@ public class CsvReporter : IReporter
         }
 
         // Files exceeding indentation limit
-        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
         if (overIndented.Count > 0)
         {
             writer.WriteLine();
@@ -58,7 +87,6 @@ public class CsvReporter : IReporter
         }
 
         // Early return violations
-        var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
         if (earlyReturnViolations.Count > 0)
         {
             writer.WriteLine();
@@ -73,8 +101,7 @@ public class CsvReporter : IReporter
             }
         }
 
-        // Tech Debt Score
-        var score = TechDebtScore.Compute(result, options, rootPath);
+        // Tech Debt Score (detailed)
         writer.WriteLine();
         writer.WriteLine("TechDebtScore,Grade");
         writer.WriteLine($"{score.Score.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{score.Grade}");
