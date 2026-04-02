@@ -67,19 +67,15 @@ public class HtmlReporter : IReporter
         var mediumCount = fileInfos.Count(f => f.Severity == Severity.Medium);
         var lowCount = fileInfos.Count(f => f.Severity == Severity.Low);
 
-        writer.Write("""
+        writer.Write($"""
             <details class="group border border-outline-variant/20 rounded-xl bg-surface-container-low overflow-hidden">
             <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container-high/30 transition-colors flex-row">
             <div class="flex items-center gap-4">
             <div class="h-8 w-1 bg-primary"></div>
             <h2 class="font-headline text-3xl font-bold text-on-surface uppercase tracking-tight">Code Duplication</h2>
-            </div>
-            <div class="flex items-center gap-2 mr-4">
-            """);
-        writer.Write($"""<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-error-container/20 text-error border border-error/20">{highCount} HIGH</span>""");
-        writer.Write($"""<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20">{mediumCount} MEDIUM</span>""");
-        writer.Write($"""<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20">{lowCount} LOW</span>""");
-        writer.Write("""
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-error-container/20 text-error border border-error/20">{highCount} HIGH</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20">{mediumCount} MEDIUM</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/10 text-secondary border border-secondary/20">{lowCount} LOW</span>
             </div><span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
             </summary>
             <div class="p-8 pt-0 space-y-12">

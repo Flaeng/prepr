@@ -94,12 +94,88 @@ public static class RuleChecker
         int currentDepth = 0;
         int maxDepth = 0;
         var lineDepths = new List<(int LineNumber, int Depth)>(lines.Length);
+        bool inBlockComment = false;
+        bool inVerbatimString = false;
 
         foreach (var line in lines)
         {
             int lineMax = currentDepth;
-            foreach (var ch in line.Text)
+            var text = line.Text;
+            bool inRegularString = false;
+            bool inChar = false;
+
+            for (int i = 0; i < text.Length; i++)
             {
+                char ch = text[i];
+                char next = i + 1 < text.Length ? text[i + 1] : '\0';
+
+                if (inBlockComment)
+                {
+                    if (ch == '*' && next == '/')
+                    {
+                        inBlockComment = false;
+                        i++;
+                    }
+                    continue;
+                }
+
+                if (inVerbatimString)
+                {
+                    if (ch == '"')
+                    {
+                        if (next == '"')
+                            i++;
+                        else
+                            inVerbatimString = false;
+                    }
+                    continue;
+                }
+
+                if (inRegularString)
+                {
+                    if (ch == '\\')
+                        i++;
+                    else if (ch == '"')
+                        inRegularString = false;
+                    continue;
+                }
+
+                if (inChar)
+                {
+                    if (ch == '\\')
+                        i++;
+                    else if (ch == '\'')
+                        inChar = false;
+                    continue;
+                }
+
+                if (ch == '/' && next == '/')
+                    break;
+
+                if (ch == '/' && next == '*')
+                {
+                    inBlockComment = true;
+                    i++;
+                    continue;
+                }
+
+                if (ch == '\'')
+                {
+                    inChar = true;
+                    continue;
+                }
+
+                if (ch == '"')
+                {
+                    bool isVerbatim = (i > 0 && text[i - 1] == '@') ||
+                                      (i > 0 && text[i - 1] == '$' && i > 1 && text[i - 2] == '@');
+                    if (isVerbatim)
+                        inVerbatimString = true;
+                    else
+                        inRegularString = true;
+                    continue;
+                }
+
                 if (ch == '{')
                 {
                     currentDepth++;
@@ -107,7 +183,9 @@ public static class RuleChecker
                         lineMax = currentDepth;
                 }
                 else if (ch == '}')
+                {
                     currentDepth--;
+                }
             }
 
             lineDepths.Add((line.LineNumber, lineMax));

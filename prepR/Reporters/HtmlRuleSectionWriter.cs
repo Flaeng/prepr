@@ -94,13 +94,16 @@ internal static class HtmlRuleSectionWriter
             writer.WriteLine($"""<tr><td class="px-6 py-3 font-mono text-[11px] text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-3 text-right font-bold text-tertiary">{v.MaxDepth}</td><td class="px-6 py-3 text-right text-on-surface-variant">{v.RangesDisplay}</td><td class="px-6 py-3 text-right text-on-surface-variant">{v.Limit}</td><td class="px-6 py-3 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show code</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
 
             var overLimitLines = new HashSet<int>(v.OverLimitRanges.SelectMany(r => Enumerable.Range(r.StartLine, r.EndLine - r.StartLine + 1)));
-            var codeSnippets = v.OverLimitRanges.SelectMany(r => ReadCodeSnippet(v.FilePath, r.StartLine, r.EndLine, contextLines: 2) ?? []).ToList();
+            var codeSnippets = v.OverLimitRanges
+                .SelectMany(r => ReadCodeSnippet(v.FilePath, r.StartLine, r.EndLine, contextLines: 2) ?? [])
+                .DistinctBy(s => s.LineNumber)
+                .ToList();
             if (codeSnippets.Count > 0)
             {
-                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3"><pre class="code-block p-4 rounded-lg font-mono text-xs text-secondary leading-relaxed overflow-x-auto border border-outline-variant/10"><code>""");
+                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3" style="max-width:0"><pre class="code-block p-4 rounded-lg font-mono text-xs text-secondary leading-relaxed overflow-x-auto border border-outline-variant/10"><code>""");
                 foreach (var (lineNum, line) in codeSnippets)
                 {
-                    var highlight = overLimitLines.Contains(lineNum) ? " style=\"background:rgba(var(--md-sys-color-secondary-rgb,160,140,255),.15)\"" : "";
+                    var highlight = overLimitLines.Contains(lineNum) ? " style=\"background:rgba(255,111,126,.2);border-left:3px solid #ff6f7e\"" : "";
                     writer.WriteLine($"<span{highlight}><span class=\"text-on-surface-variant/50\">{lineNum,4} │ </span>{WebUtility.HtmlEncode(line)}</span>");
                 }
                 writer.Write("""</code></pre></td></tr>""");

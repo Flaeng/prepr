@@ -68,6 +68,14 @@
       "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~LineLimitRule\\|FullyQualifiedName~IndentationRule\" 2>&1 \\| Select-Object -Last 10$/": {
         "approve": true,
         "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~ConfigLoader\" 2>&1 \\| Select-Object -Last 10$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~Html\" 2>&1 \\| Select-Object -Last 10$/": {
+        "approve": true,
+        "matchCommandLine": true
       }
     },
     "debug.onTaskErrors": "abort"

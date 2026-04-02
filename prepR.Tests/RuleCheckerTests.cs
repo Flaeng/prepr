@@ -216,4 +216,134 @@ public class RuleCheckerTests
 
         Assert.Empty(result.Duplicates);
     }
+
+    [Fact]
+    public void NestingDepth_InterpolatedString_BracesNotCounted()
+    {
+        using var tree = new TempFileTree();
+        var lines = new[]
+        {
+            "public class C",
+            "{",
+            "    public void M()",
+            "    {",
+            "        writer.WriteLine($\"{CsvEscape(path)},{v.MaxDepth},{v.Limit}\");",
+            "    }",
+            "}",
+        };
+        tree.AddFile("a.cs", lines);
+
+        var files = new[] { Path.Combine(tree.RootPath, "a.cs") };
+        var result = RuleChecker.Run(files);
+
+        var (maxDepth, _) = result.FileMaxNestingDepths[files[0]];
+        Assert.Equal(2, maxDepth);
+    }
+
+    [Fact]
+    public void NestingDepth_VerbatimString_BracesNotCounted()
+    {
+        using var tree = new TempFileTree();
+        var lines = new[]
+        {
+            "public class C",
+            "{",
+            "    var s = @\"some { braces } here\";",
+            "}",
+        };
+        tree.AddFile("a.cs", lines);
+
+        var files = new[] { Path.Combine(tree.RootPath, "a.cs") };
+        var result = RuleChecker.Run(files);
+
+        var (maxDepth, _) = result.FileMaxNestingDepths[files[0]];
+        Assert.Equal(1, maxDepth);
+    }
+
+    [Fact]
+    public void NestingDepth_CharLiteral_BracesNotCounted()
+    {
+        using var tree = new TempFileTree();
+        var lines = new[]
+        {
+            "public class C",
+            "{",
+            "    char a = '{';",
+            "    char b = '}';",
+            "}",
+        };
+        tree.AddFile("a.cs", lines);
+
+        var files = new[] { Path.Combine(tree.RootPath, "a.cs") };
+        var result = RuleChecker.Run(files);
+
+        var (maxDepth, _) = result.FileMaxNestingDepths[files[0]];
+        Assert.Equal(1, maxDepth);
+    }
+
+    [Fact]
+    public void NestingDepth_LineComment_BracesNotCounted()
+    {
+        using var tree = new TempFileTree();
+        var lines = new[]
+        {
+            "public class C",
+            "{",
+            "    // { not a scope }",
+            "}",
+        };
+        tree.AddFile("a.cs", lines);
+
+        var files = new[] { Path.Combine(tree.RootPath, "a.cs") };
+        var result = RuleChecker.Run(files);
+
+        var (maxDepth, _) = result.FileMaxNestingDepths[files[0]];
+        Assert.Equal(1, maxDepth);
+    }
+
+    [Fact]
+    public void NestingDepth_BlockComment_BracesNotCounted()
+    {
+        using var tree = new TempFileTree();
+        var lines = new[]
+        {
+            "public class C",
+            "{",
+            "    /* { not a scope",
+            "       } still comment */",
+            "}",
+        };
+        tree.AddFile("a.cs", lines);
+
+        var files = new[] { Path.Combine(tree.RootPath, "a.cs") };
+        var result = RuleChecker.Run(files);
+
+        var (maxDepth, _) = result.FileMaxNestingDepths[files[0]];
+        Assert.Equal(1, maxDepth);
+    }
+
+    [Fact]
+    public void NestingDepth_RealBraces_StillCounted()
+    {
+        using var tree = new TempFileTree();
+        var lines = new[]
+        {
+            "public class C",
+            "{",
+            "    public void M()",
+            "    {",
+            "        if (true)",
+            "        {",
+            "        }",
+            "    }",
+            "}",
+        };
+        tree.AddFile("a.cs", lines);
+
+        var files = new[] { Path.Combine(tree.RootPath, "a.cs") };
+        var result = RuleChecker.Run(files);
+
+        var (maxDepth, _) = result.FileMaxNestingDepths[files[0]];
+        Assert.Equal(3, maxDepth);
+    }
 }
