@@ -21,6 +21,7 @@ public class MarkdownReporter : IReporter
         if (result.Duplicates.Count == 0)
         {
             writer.WriteLine("No duplicate blocks found.");
+            WriteTechDebtScore(result, rootPath, writer, options);
             return;
         }
 
@@ -69,7 +70,7 @@ public class MarkdownReporter : IReporter
             |------|--------|------------------|---------------|----------|
             """);
 
-        var fileInfos = FileDuplicationInfo.ComputePerFile(result, options);
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         foreach (var info in fileInfos)
         {
             var relativePath = Path.GetRelativePath(rootPath, info.FilePath);
@@ -93,6 +94,9 @@ public class MarkdownReporter : IReporter
 
         // Early return violations
         WriteEarlyReturnRule(result, rootPath, writer, options);
+
+        // Tech Debt Score
+        WriteTechDebtScore(result, rootPath, writer, options);
     }
 
     private static void WriteLineLimitRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
@@ -171,6 +175,20 @@ public class MarkdownReporter : IReporter
                 writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | {v.Description} |");
             }
         }
+    }
+
+    private static void WriteTechDebtScore(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var score = TechDebtScore.Compute(result, options, rootPath);
+        writer.Write($"""
+
+            ---
+
+            ## Tech Debt Score
+
+            **Score:** {score.Score:F1}/100 — **Grade: {score.Grade}**
+
+            """);
     }
 
     private static void WritePairs(string rootPath, TextWriter writer, ReportOptions options, List<FilePairGroup> pairs)

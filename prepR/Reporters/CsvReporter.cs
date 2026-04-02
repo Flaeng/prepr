@@ -19,7 +19,7 @@ public class CsvReporter : IReporter
         }
 
         // Per-file severity summary
-        var fileInfos = FileDuplicationInfo.ComputePerFile(result, options);
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         if (fileInfos.Count > 0)
         {
             writer.WriteLine();
@@ -72,6 +72,12 @@ public class CsvReporter : IReporter
                 }
             }
         }
+
+        // Tech Debt Score
+        var score = TechDebtScore.Compute(result, options, rootPath);
+        writer.WriteLine();
+        writer.WriteLine("TechDebtScore,Grade");
+        writer.WriteLine($"{score.Score.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{score.Grade}");
     }
 
     private static string CsvEscape(string value)

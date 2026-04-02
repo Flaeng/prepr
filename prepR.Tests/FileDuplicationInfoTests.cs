@@ -6,7 +6,7 @@ public class FileDuplicationInfoTests
     public void ComputePerFile_NoDuplicates_ReturnsEmpty()
     {
         var result = new ScanResult([], 5, 100, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
-        var infos = FileDuplicationInfo.ComputePerFile(result, new ReportOptions());
+        var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.Empty(infos);
     }
@@ -26,7 +26,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathB, 1, 5)
             ]);
         var result = new ScanResult([block], 2, 20, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
-        var infos = FileDuplicationInfo.ComputePerFile(result, new ReportOptions());
+        var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.Equal(2, infos.Count);
         foreach (var info in infos)
@@ -54,7 +54,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathB, 1, 5)
             ]);
         var result = new ScanResult([block], 2, 40, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
-        var infos = FileDuplicationInfo.ComputePerFile(result, new ReportOptions());
+        var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.All(infos, info => Assert.Equal(Severity.Medium, info.Severity));
     }
@@ -74,7 +74,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathB, 1, 5)
             ]);
         var result = new ScanResult([block], 2, 200, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
-        var infos = FileDuplicationInfo.ComputePerFile(result, new ReportOptions());
+        var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.All(infos, info => Assert.Equal(Severity.Low, info.Severity));
     }
@@ -97,7 +97,7 @@ public class FileDuplicationInfoTests
 
         // With custom high threshold of 60%, 50% should be medium
         var options = new ReportOptions(HighSeverityThreshold: 60, MediumSeverityThreshold: 40);
-        var infos = FileDuplicationInfo.ComputePerFile(result, options);
+        var infos = DuplicationFileInfo.ComputePerFile(result, options);
 
         Assert.All(infos, info => Assert.Equal(Severity.Medium, info.Severity));
     }
@@ -116,7 +116,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathB, 1, 5)
             ]);
         var result = new ScanResult([block], 2, 110, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
-        var infos = FileDuplicationInfo.ComputePerFile(result, new ReportOptions());
+        var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.Equal(2, infos.Count);
         // A has 50%, B has 5% → A should be first

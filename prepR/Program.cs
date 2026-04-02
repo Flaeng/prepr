@@ -19,7 +19,8 @@ var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks ac
     CacheOption,
     MaxFileLinesOption,
     MaxIndentationOption,
-    EarlyReturnOption
+    EarlyReturnOption,
+    MaxTechDebtScoreOption
 };
 
 rootCommand.SetAction((ParseResult parse) =>
@@ -99,6 +100,17 @@ rootCommand.SetAction((ParseResult parse) =>
         var totalViolations = earlyReturnViolations.Sum(f => f.Violations.Count);
         Console.Error.WriteLine($"Error: {totalViolations} early return opportunity(ies) found in {earlyReturnViolations.Count} file(s).");
         Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if tech debt score exceeds threshold
+    if (runOptions.MaxTechDebtScore is not null)
+    {
+        var techDebtScore = TechDebtScore.Compute(result, reportOptions, path.FullName);
+        if (techDebtScore.Score > runOptions.MaxTechDebtScore.Value)
+        {
+            Console.Error.WriteLine($"Error: Tech debt score {techDebtScore.Score:F1}/100 (Grade: {techDebtScore.Grade}) exceeds maximum of {runOptions.MaxTechDebtScore.Value}.");
+            Environment.ExitCode = 2;
+        }
     }
 });
 

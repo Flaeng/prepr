@@ -29,6 +29,7 @@ public class ConsoleReporter : IReporter
         {
             WriteLine("No duplicate blocks found.", ConsoleColor.Green);
             Console.WriteLine();
+            WriteTechDebtScore(result, rootPath, options);
             return;
         }
 
@@ -40,7 +41,7 @@ public class ConsoleReporter : IReporter
         WriteLine("Per-file Summary", ConsoleColor.White);
         Console.WriteLine();
 
-        var fileInfos = FileDuplicationInfo.ComputePerFile(result, options);
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         foreach (var info in fileInfos)
         {
             var relativePath = Path.GetRelativePath(rootPath, info.FilePath);
@@ -82,6 +83,9 @@ public class ConsoleReporter : IReporter
         {
             WriteEarlyReturnRule(result, rootPath);
         }
+
+        // Tech Debt Score
+        WriteTechDebtScore(result, rootPath, options);
     }
 
     private static void WriteLineLimitRule(ScanResult result, string rootPath, ReportOptions options)
@@ -148,6 +152,23 @@ public class ConsoleReporter : IReporter
                 WriteLine(v.Description, ConsoleColor.Gray);
             }
         }
+        Console.WriteLine();
+    }
+
+    private static void WriteTechDebtScore(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var score = TechDebtScore.Compute(result, options, rootPath);
+        Console.WriteLine(new string('─', 60));
+        var gradeColor = score.Grade switch
+        {
+            'A' or 'B' => ConsoleColor.Green,
+            'C' => ConsoleColor.Yellow,
+            _ => ConsoleColor.Red
+        };
+        Write("Tech Debt Score: ", ConsoleColor.White);
+        Write($"{score.Score:F1}/100", gradeColor);
+        Write("  Grade: ", ConsoleColor.White);
+        WriteLine($"{score.Grade}", gradeColor);
         Console.WriteLine();
     }
 

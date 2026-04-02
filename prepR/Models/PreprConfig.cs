@@ -44,6 +44,21 @@ public class PreprConfig
     [JsonPropertyName("earlyReturn")]
     public bool? EarlyReturn { get; set; }
 
+    [JsonPropertyName("techDebtWeightDuplication")]
+    public int? TechDebtWeightDuplication { get; set; }
+
+    [JsonPropertyName("techDebtWeightLineLimit")]
+    public int? TechDebtWeightLineLimit { get; set; }
+
+    [JsonPropertyName("techDebtWeightIndentation")]
+    public int? TechDebtWeightIndentation { get; set; }
+
+    [JsonPropertyName("techDebtWeightEarlyReturn")]
+    public int? TechDebtWeightEarlyReturn { get; set; }
+
+    [JsonPropertyName("maxTechDebtScore")]
+    public int? MaxTechDebtScore { get; set; }
+
     public static readonly string DefaultConfigJson = JsonSerializer.Serialize(new PreprConfig
     {
         Output = ["console", "html", "md", "csv", "prompt"],
@@ -58,6 +73,11 @@ public class PreprConfig
         MaxDuplicates = null,
         MaxFileLines = new Dictionary<string, int> { { "*", 200 } },
         MaxIndentation = new Dictionary<string, int> { { "*", 4 } },
-        EarlyReturn = true
+        EarlyReturn = true,
+        TechDebtWeightDuplication = 40,
+        TechDebtWeightLineLimit = 20,
+        TechDebtWeightIndentation = 20,
+        TechDebtWeightEarlyReturn = 20,
+        MaxTechDebtScore = null
     }, new JsonSerializerOptions { WriteIndented = true });
 }

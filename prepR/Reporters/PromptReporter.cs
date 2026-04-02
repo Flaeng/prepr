@@ -20,11 +20,20 @@ public class PromptReporter : IReporter
         if (result.Duplicates.Count == 0)
         {
             writer.WriteLine("No duplicates found — no action needed.");
+            var techDebtScoreEmpty = TechDebtScore.Compute(result, options, rootPath);
+            writer.WriteLine($"""
+
+                ---
+
+                ## Tech Debt Score
+
+                **Score:** {techDebtScoreEmpty.Score:F1}/100 — **Grade: {techDebtScoreEmpty.Grade}**
+                """);
             return;
         }
 
         // High-severity files first
-        var fileInfos = FileDuplicationInfo.ComputePerFile(result, options);
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         var highSeverity = fileInfos.Where(f => f.Severity == Severity.High).ToList();
         if (highSeverity.Count > 0)
         {
@@ -132,6 +141,18 @@ public class PromptReporter : IReporter
                 writer.WriteLine();
             }
         }
+
+        // Tech Debt Score
+        var techDebtScore = TechDebtScore.Compute(result, options, rootPath);
+        writer.WriteLine($"""
+            ---
+
+            ## Tech Debt Score
+
+            **Score:** {techDebtScore.Score:F1}/100 — **Grade: {techDebtScore.Grade}**
+
+            This score reflects the overall technical debt density of the codebase, normalized by codebase size. A larger codebase with the same number of issues scores lower than a smaller one.
+            """);
     }
 
     private static void WriteDuplications(ScanResult result, string rootPath, TextWriter writer)

@@ -13,6 +13,7 @@ public class RunOptions
     public string? OutputFile { get; set; }
     public int Threshold { get; set; }
     public int? MaxDuplicates { get; set; }
+    public int? MaxTechDebtScore { get; set; }
     public bool UseCache { get; set; }
 
     public static RunOptions Create(PreprConfig config, ParseResult parse)
@@ -38,6 +39,9 @@ public class RunOptions
         var maxDuplicates = parse.GetResult(MaxDuplicatesOption) is not null
             ? parse.GetValue(MaxDuplicatesOption) : config.MaxDuplicates;
 
+        var maxTechDebtScore = parse.GetResult(MaxTechDebtScoreOption) is not null
+            ? parse.GetValue(MaxTechDebtScoreOption) : config.MaxTechDebtScore;
+
         var useCache = parse.GetValue(CacheOption);
 
         return new RunOptions
@@ -49,6 +53,7 @@ public class RunOptions
             OutputFile = outputFile,
             Threshold = threshold,
             MaxDuplicates = maxDuplicates,
+            MaxTechDebtScore = maxTechDebtScore,
             UseCache = useCache
         };
     }

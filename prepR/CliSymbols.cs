@@ -89,4 +89,9 @@ public static class CliSymbols
     {
         Description = "Enable or disable the early return rule. Detects else blocks that could be replaced with guard clauses. Exits with code 2 if violations are found."
     };
+
+    public static readonly Option<int?> MaxTechDebtScoreOption = new("--max-tech-debt-score")
+    {
+        Description = "Maximum allowed tech debt score (0–100). Exits with code 2 if exceeded."
+    };
 }

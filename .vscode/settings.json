@@ -52,6 +52,18 @@
       "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj$/": {
         "approve": true,
         "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj --filter \"[A-Za-z]+\" 2>&1 \\| Select-Object -Last [0-9]+$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj 2>&1 \\| Select-Object -Last [0-9]+$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"[A-Za-z]+\" 2>&1 \\| Select-Object -Last [0-9]+$/": {
+        "approve": true,
+        "matchCommandLine": true
       }
     },
     "debug.onTaskErrors": "abort"

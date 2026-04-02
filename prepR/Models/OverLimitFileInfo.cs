@@ -18,4 +18,9 @@ public record OverLimitFileInfo(string FilePath, int LineCount, int Limit)
 
         return violations.OrderByDescending(v => v.LineCount).ThenBy(v => v.FilePath).ToList();
     }
+
+    internal string? GetPrompt(string relativePath)
+    {
+        return $"Refactor the file `{relativePath}` to reduce its line count. The file currently has {LineCount} lines, but the limit is {Limit}. Split it into smaller, more focused files or extract logic into separate classes or methods to bring it under {Limit} lines.";
+    }
 }

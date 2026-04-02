@@ -99,4 +99,86 @@ public class HtmlReporterTests
         Assert.Contains("No duplicate blocks found.", output);
         Assert.Contains("</html>", output);
     }
+
+    [Fact]
+    public void Report_IndentationOverage_ContainsPromptButtons()
+    {
+        var nestingDepths = new Dictionary<string, (int, int)>
+        {
+            ["/src/Deep.cs"] = (8, 42)
+        };
+        var block = new DuplicateBlock(
+            ["var x = 1;", "var y = 2;", "var z = 3;", "Console.WriteLine(x);", "Console.WriteLine(y);"],
+            [
+                new FileLocation("/src/Deep.cs", 10, 14),
+                new FileLocation("/src/Other.cs", 20, 24)
+            ]);
+        var result = new ScanResult([block], 1, 50,
+            new Dictionary<string, int>(),
+            nestingDepths,
+            new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+
+        var options = new ReportOptions { IndentationRule = new IndentationRule(new Dictionary<string, int> { ["*"] = 3 }, null) };
+        var reporter = new HtmlReporter();
+        using var writer = new StringWriter();
+        reporter.Report(result, "/src", writer, options);
+        var output = writer.ToString();
+
+        Assert.Contains("Indentation Overage", output);
+        Assert.Contains("Show prompt", output);
+        Assert.Contains("Copy prompt", output);
+        Assert.Contains("showPromptModal", output);
+        Assert.Contains("copyPrompt", output);
+        Assert.Contains("Deep.cs", output);
+        Assert.Contains("depth is 8", output);
+        Assert.Contains("line 42", output);
+        Assert.Contains("limit is 3", output);
+    }
+
+    [Fact]
+    public void Report_LineLimitOverage_ContainsPromptButtons()
+    {
+        var lineCounts = new Dictionary<string, int>
+        {
+            ["/src/BigFile.cs"] = 500
+        };
+        var block = new DuplicateBlock(
+            ["var x = 1;", "var y = 2;", "var z = 3;", "Console.WriteLine(x);", "Console.WriteLine(y);"],
+            [
+                new FileLocation("/src/BigFile.cs", 10, 14),
+                new FileLocation("/src/Other.cs", 20, 24)
+            ]);
+        var result = new ScanResult([block], 1, 500,
+            lineCounts,
+            new Dictionary<string, (int, int)>(),
+            new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+
+        var options = new ReportOptions { LineLimitRule = new LineLimitRule(new Dictionary<string, int> { ["*"] = 200 }, null) };
+        var reporter = new HtmlReporter();
+        using var writer = new StringWriter();
+        reporter.Report(result, "/src", writer, options);
+        var output = writer.ToString();
+
+        Assert.Contains("Line Count Overage", output);
+        Assert.Contains("Show prompt", output);
+        Assert.Contains("Copy prompt", output);
+        Assert.Contains("BigFile.cs", output);
+        Assert.Contains("has 500 lines", output);
+        Assert.Contains("limit is 200", output);
+    }
+
+    [Fact]
+    public void Report_PerFileSummary_ContainsPromptButtons()
+    {
+        var reporter = new HtmlReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("Per-file Summary", output);
+        Assert.Contains("Show prompt", output);
+        Assert.Contains("Copy prompt", output);
+        Assert.Contains("showPromptModal", output);
+        Assert.Contains("eliminate code duplication", output);
+    }
 }

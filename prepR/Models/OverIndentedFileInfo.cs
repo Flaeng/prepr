@@ -18,4 +18,9 @@ public record OverIndentedFileInfo(string FilePath, int MaxDepth, int LineNumber
 
         return violations.OrderByDescending(v => v.MaxDepth).ThenBy(v => v.FilePath).ToList();
     }
+
+    internal string? GetPrompt(string relativePath)
+    {
+        return $"Refactor the file `{relativePath}` to reduce nesting depth. The maximum nesting depth is {MaxDepth} (found at line {LineNumber}), but the limit is {Limit}. Reduce the nesting to at most {Limit} levels using techniques like early returns, guard clauses, extracting methods, or inverting conditions.";
+    }
 }

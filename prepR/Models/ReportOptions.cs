@@ -10,7 +10,11 @@ public record ReportOptions(
     int MediumSeverityThreshold = 25,
     LineLimitRule? LineLimitRule = null,
     IndentationRule? IndentationRule = null,
-    bool EarlyReturn = false)
+    bool EarlyReturn = false,
+    int TechDebtWeightDuplication = 40,
+    int TechDebtWeightLineLimit = 20,
+    int TechDebtWeightIndentation = 20,
+    int TechDebtWeightEarlyReturn = 20)
 {
     public static ReportOptions Create(
         PreprConfig config,
@@ -61,7 +65,11 @@ public record ReportOptions(
             config.MediumSeverityThreshold ?? 25,
             lineLimitRule.HasRules ? lineLimitRule : null,
             indentationRule.HasRules ? indentationRule : null,
-            earlyReturn);
+            earlyReturn,
+            config.TechDebtWeightDuplication ?? 40,
+            config.TechDebtWeightLineLimit ?? 20,
+            config.TechDebtWeightIndentation ?? 20,
+            config.TechDebtWeightEarlyReturn ?? 20);
     }
 
     private static Verbosity ParseVerbosity(string? value) => value?.ToLowerInvariant() switch

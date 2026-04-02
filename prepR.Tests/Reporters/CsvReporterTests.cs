@@ -58,14 +58,16 @@ public class CsvReporterTests
     }
 
     [Fact]
-    public void Report_NoDuplicates_OnlyHeaderRow()
+    public void Report_NoDuplicates_OnlyHeaderRowAndScore()
     {
         var reporter = new CsvReporter();
         using var writer = new StringWriter();
         reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>()), "/src", writer, new ReportOptions());
         var lines = writer.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
-        Assert.Single(lines);
+        Assert.Equal(3, lines.Length);
         Assert.StartsWith("BlockNumber", lines[0]);
+        Assert.Equal("TechDebtScore,Grade", lines[1]);
+        Assert.Equal("0.0,A", lines[2]);
     }
 }
