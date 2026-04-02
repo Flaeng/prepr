@@ -8,7 +8,7 @@ public class ScanCache
 {
     private const string CacheFileName = ".prepr-cache";
 
-    private ConcurrentDictionary<string, CachedFileEntry> _entries;
+    private readonly ConcurrentDictionary<string, CachedFileEntry> _entries;
 
     private ScanCache(ConcurrentDictionary<string, CachedFileEntry> entries)
     {
@@ -65,7 +65,7 @@ public class ScanCache
         try
         {
             var json = File.ReadAllText(cachePath);
-            var entries = JsonSerializer.Deserialize<Dictionary<string, CachedFileEntry>>(json);
+            var entries = JsonSerializer.Deserialize<Dictionary<string, CachedFileEntry>>(json) ?? [];
             return new ScanCache(new ConcurrentDictionary<string, CachedFileEntry>(entries));
         }
         catch

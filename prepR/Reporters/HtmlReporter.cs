@@ -1,4 +1,5 @@
 using System.Net;
+
 using static Prepr.Reporters.HtmlReporterStyles;
 
 namespace Prepr.Reporters;

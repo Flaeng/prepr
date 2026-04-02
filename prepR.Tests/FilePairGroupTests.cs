@@ -102,7 +102,7 @@ public class FilePairGroupTests
         Assert.Equal(2, pairs.Count);
         // A↔B has 2 blocks, C↔D has 1 block → A↔B first
         Assert.Equal(2, pairs[0].SharedBlocks.Count);
-        Assert.Equal(1, pairs[1].SharedBlocks.Count);
+        Assert.Single(pairs[1].SharedBlocks);
     }
 
     [Fact]
