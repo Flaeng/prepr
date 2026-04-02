@@ -1,8 +1,8 @@
 using System.CommandLine;
-using System.CommandLine.Parsing;
-using static prepr.CliSymbols;
 
-namespace prepr;
+using static Prepr.CliSymbols;
+
+namespace Prepr.Models;
 
 public record ReportOptions(
     Verbosity Verbosity = Verbosity.Normal,
@@ -11,7 +11,7 @@ public record ReportOptions(
     LineLimitRule? LineLimitRule = null)
 {
     public static ReportOptions Create(
-        preprConfig config,
+        PreprConfig config,
         ParseResult parse,
         TextWriter? errorWriter = null)
     {

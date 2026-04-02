@@ -1,6 +1,4 @@
-using prepr;
-
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 public class LineLimitRuleTests
 {
@@ -116,8 +114,9 @@ public class OverLimitFileInfoTests
         };
         var result = new ScanResult([], 2, 80, lineCounts);
         var rule = new LineLimitRule(null, 100);
+        var options = new ReportOptions(LineLimitRule: rule);
 
-        var violations = OverLimitFileInfo.Compute(result, rule, "/root");
+        var violations = OverLimitFileInfo.Compute(result, options, "/root");
 
         Assert.Empty(violations);
     }
@@ -133,8 +132,9 @@ public class OverLimitFileInfoTests
         };
         var result = new ScanResult([], 3, 380, lineCounts);
         var rule = new LineLimitRule(null, 100);
+        var options = new ReportOptions(LineLimitRule: rule);
 
-        var violations = OverLimitFileInfo.Compute(result, rule, "/root");
+        var violations = OverLimitFileInfo.Compute(result, options, "/root");
 
         Assert.Equal(2, violations.Count);
         // Sorted by line count descending
@@ -159,8 +159,9 @@ public class OverLimitFileInfoTests
             { "src/FolderA/FolderB", 70 }
         };
         var rule = new LineLimitRule(rules, null);
+        var options = new ReportOptions(LineLimitRule: rule);
 
-        var violations = OverLimitFileInfo.Compute(result, rule, "/root");
+        var violations = OverLimitFileInfo.Compute(result, options, "/root");
 
         // FolderA/file.cs (60 lines, limit 50) → violation
         // FolderA/FolderB/file.cs (60 lines, limit 70) → NOT a violation
@@ -176,8 +177,9 @@ public class OverLimitFileInfoTests
         var lineCounts = new Dictionary<string, int> { { "/root/a.cs", 100 } };
         var result = new ScanResult([], 1, 100, lineCounts);
         var rule = new LineLimitRule(null, 100);
+        var options = new ReportOptions(LineLimitRule: rule);
 
-        var violations = OverLimitFileInfo.Compute(result, rule, "/root");
+        var violations = OverLimitFileInfo.Compute(result, options, "/root");
 
         Assert.Empty(violations);
     }

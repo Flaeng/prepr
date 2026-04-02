@@ -5,7 +5,7 @@
     "csv",
     "prompt"
   ],
-  "outputFile": "report.prepr",
+  "outputFile": "reports/report.prepr",
   "threshold": 5,
   "includeExtensions": [],
   "excludeExtensions": [".json"],
@@ -15,7 +15,8 @@
     "obj",
     ".git",
     ".prepr-cache",
-    "prepr.Tests"
+    "prepr.Tests",
+    "reports"
   ],
   "verbosity": "normal",
   "highSeverityThreshold": 50,

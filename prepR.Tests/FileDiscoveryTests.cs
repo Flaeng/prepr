@@ -1,6 +1,4 @@
-using prepr;
-
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 public class FileDiscoveryTests
 {
@@ -12,7 +10,7 @@ public class FileDiscoveryTests
         tree.AddFile("sub/nested.cs", "// nested");
         tree.AddFile("sub/deep/deeper.cs", "// deeper");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions()).DiscoverFiles();
 
         Assert.Equal(3, files.Count);
     }
@@ -25,7 +23,7 @@ public class FileDiscoveryTests
         tree.AddFile("app.exe", "binary");
         tree.AddFile("lib.dll", "binary");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions()).DiscoverFiles();
 
         Assert.Single(files);
         Assert.EndsWith(".cs", files[0]);
@@ -39,7 +37,7 @@ public class FileDiscoveryTests
         tree.AddFile("script.ts", "// ts");
         tree.AddFile("page.html", "<!-- html -->");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath, [".ts"]);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions { Extensions = [".ts"] }).DiscoverFiles();
 
         Assert.Single(files);
         Assert.EndsWith(".ts", files[0]);
@@ -52,7 +50,7 @@ public class FileDiscoveryTests
         tree.AddFile("code.cs", "// c#");
         tree.AddFile("script.ts", "// ts");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath, ["cs"]); // no leading dot
+        var files = new FileDiscovery(tree.RootPath, new RunOptions { Extensions = ["cs"] }).DiscoverFiles(); // no leading dot
 
         Assert.Single(files);
         Assert.EndsWith(".cs", files[0]);
@@ -63,7 +61,7 @@ public class FileDiscoveryTests
     {
         using var tree = new TempFileTree();
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions()).DiscoverFiles();
 
         Assert.Empty(files);
     }
@@ -77,7 +75,7 @@ public class FileDiscoveryTests
         tree.AddFile("app.py", "# python");
         tree.AddFile("app.json", "{}");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions()).DiscoverFiles();
 
         Assert.Equal(4, files.Count);
     }
@@ -90,7 +88,7 @@ public class FileDiscoveryTests
         tree.AddFile("data.json", "{}");
         tree.AddFile("config.xml", "<root/>");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath, excludeExtensions: [".json", ".xml"]);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions { ExcludeExtensions = [".json", ".xml"] }).DiscoverFiles();
 
         Assert.Single(files);
         Assert.EndsWith(".cs", files[0]);
@@ -105,7 +103,7 @@ public class FileDiscoveryTests
         tree.AddFile("obj/temp.cs", "// obj");
         tree.AddFile("src/sub/bin/nested.cs", "// nested bin");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath, ignorePaths: ["bin", "obj"]);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions { IgnorePaths = ["bin", "obj"] }).DiscoverFiles();
 
         Assert.Single(files);
         Assert.Contains("src", files[0]);
@@ -120,7 +118,7 @@ public class FileDiscoveryTests
         tree.AddFile("code.generated.cs", "// skip");
         tree.AddFile("sub/other.generated.cs", "// skip nested");
 
-        var files = FileDiscovery.DiscoverFiles(tree.RootPath, ignorePaths: ["**/*.generated.cs"]);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions { IgnorePaths = ["**/*.generated.cs"] }).DiscoverFiles();
 
         Assert.Single(files);
         Assert.EndsWith("code.cs", files[0]);
@@ -135,10 +133,7 @@ public class FileDiscoveryTests
         tree.AddFile("bin/app.cs", "// bin");         // excluded by ignore path
         tree.AddFile("src/app.generated.cs", "// gen"); // excluded by glob
 
-        var files = FileDiscovery.DiscoverFiles(
-            tree.RootPath,
-            excludeExtensions: [".json"],
-            ignorePaths: ["bin", "**/*.generated.cs"]);
+        var files = new FileDiscovery(tree.RootPath, new RunOptions { ExcludeExtensions = [".json"], IgnorePaths = ["bin", "**/*.generated.cs"] }).DiscoverFiles();
 
         Assert.Single(files);
         Assert.EndsWith("app.cs", files[0]);

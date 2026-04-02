@@ -1,4 +1,4 @@
-namespace prepr;
+namespace Prepr;
 
 public sealed class ProgressBar
 {

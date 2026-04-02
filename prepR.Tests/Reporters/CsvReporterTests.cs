@@ -1,6 +1,4 @@
-using prepr;
-
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 public class CsvReporterTests
 {
@@ -23,7 +21,7 @@ public class CsvReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var lines = writer.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
-        Assert.Equal("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine,Content", lines[0]);
+        Assert.Equal("BlockNumber,LineCount,OccurrenceCount,FilePath,StartLine,EndLine", lines[0]);
     }
 
     [Fact]
@@ -52,51 +50,11 @@ public class CsvReporterTests
             .TakeWhile(l => !l.StartsWith("File,"))
             .ToArray();
 
-        // Each block data row should have 7 columns
+        // Each block data row should have 6 columns
         foreach (var line in blockLines)
         {
-            Assert.Equal(7, line.Split(',').Length);
+            Assert.Equal(6, line.Split(',').Length);
         }
-    }
-
-    [Fact]
-    public void Report_EscapesCommasInContent()
-    {
-        var block = new DuplicateBlock(
-            ["var x = 1, y = 2;", "a();", "b();", "c();", "d();"],
-            [
-                new FileLocation("/src/A.cs", 1, 5),
-                new FileLocation("/src/B.cs", 1, 5)
-            ]);
-        var result = new ScanResult([block], 2, 10, new Dictionary<string, int>());
-
-        var reporter = new CsvReporter();
-        using var writer = new StringWriter();
-        reporter.Report(result, "/src", writer, new ReportOptions());
-        var output = writer.ToString();
-
-        // Content with comma should be quoted
-        Assert.Contains("\"var x = 1, y = 2;\"", output);
-    }
-
-    [Fact]
-    public void Report_EscapesQuotesInContent()
-    {
-        var block = new DuplicateBlock(
-            ["Console.WriteLine(\"hello\");", "a();", "b();", "c();", "d();"],
-            [
-                new FileLocation("/src/A.cs", 1, 5),
-                new FileLocation("/src/B.cs", 1, 5)
-            ]);
-        var result = new ScanResult([block], 2, 10, new Dictionary<string, int>());
-
-        var reporter = new CsvReporter();
-        using var writer = new StringWriter();
-        reporter.Report(result, "/src", writer, new ReportOptions());
-        var output = writer.ToString();
-
-        // Quotes should be doubled and wrapped
-        Assert.Contains("\"\"hello\"\"", output);
     }
 
     [Fact]

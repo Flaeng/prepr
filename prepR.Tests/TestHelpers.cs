@@ -1,4 +1,4 @@
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 /// <summary>
 /// Creates a temporary directory tree with files of known content for testing.

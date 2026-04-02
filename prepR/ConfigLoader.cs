@@ -1,79 +1,27 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
-namespace prepr;
-
-public class preprConfig
-{
-    [JsonPropertyName("output")]
-    public string[]? Output { get; set; }
-
-    [JsonPropertyName("outputFile")]
-    public string? OutputFile { get; set; }
-
-    [JsonPropertyName("threshold")]
-    public int? Threshold { get; set; }
-
-    [JsonPropertyName("includeExtensions")]
-    public string[]? IncludeExtensions { get; set; }
-
-    [JsonPropertyName("excludeExtensions")]
-    public string[]? ExcludeExtensions { get; set; }
-
-    [JsonPropertyName("ignorePaths")]
-    public string[]? IgnorePaths { get; set; }
-
-    [JsonPropertyName("verbosity")]
-    public string? Verbosity { get; set; }
-
-    [JsonPropertyName("highSeverityThreshold")]
-    public int? HighSeverityThreshold { get; set; }
-
-    [JsonPropertyName("mediumSeverityThreshold")]
-    public int? MediumSeverityThreshold { get; set; }
-
-    [JsonPropertyName("maxDuplicates")]
-    public int? MaxDuplicates { get; set; }
-
-    [JsonPropertyName("maxFileLines")]
-    public Dictionary<string, int>? MaxFileLines { get; set; }
-
-    public static readonly string DefaultConfigJson = JsonSerializer.Serialize(new preprConfig
-    {
-        Output = ["console", "html", "md", "csv", "prompt"],
-        OutputFile = "report.prepr",
-        Threshold = 5,
-        IncludeExtensions = [],
-        ExcludeExtensions = [],
-        IgnorePaths = ["node_modules", "bin", "obj", ".git", ".prepr-cache"],
-        Verbosity = "normal",
-        HighSeverityThreshold = 50,
-        MediumSeverityThreshold = 25,
-        MaxDuplicates = null,
-        MaxFileLines = new Dictionary<string, int> { { "*", 200 } }
-    }, new JsonSerializerOptions { WriteIndented = true });
-}
+namespace Prepr;
 
 public static class ConfigLoader
 {
     public const string ConfigFileName = ".preprrc";
 
-    public static preprConfig LoadConfig(string startDirectory)
+    public static PreprConfig LoadConfig(string startDirectory)
     {
         var configPath = FindConfigFile(startDirectory);
         if (configPath is null)
-            return new preprConfig();
+            return new PreprConfig();
 
         try
         {
             var json = File.ReadAllText(configPath);
-            var config = JsonSerializer.Deserialize<preprConfig>(json, new JsonSerializerOptions
+            var config = JsonSerializer.Deserialize<PreprConfig>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
             if (config is null)
-                return new preprConfig();
+                return new PreprConfig();
 
             if (config.Threshold is <= 0)
             {
@@ -119,7 +67,7 @@ public static class ConfigLoader
         catch (JsonException ex)
         {
             Console.Error.WriteLine($"Warning: Invalid JSON in '{configPath}': {ex.Message}. Using defaults.");
-            return new preprConfig();
+            return new PreprConfig();
         }
     }
 

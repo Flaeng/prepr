@@ -1,7 +1,6 @@
 using System.Text.Json;
-using prepr;
 
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 public class ConfigLoaderTests
 {
@@ -119,7 +118,7 @@ public class ConfigLoaderTests
     [Fact]
     public void DefaultConfigJson_IsValidJson()
     {
-        var config = JsonSerializer.Deserialize<preprConfig>(preprConfig.DefaultConfigJson);
+        var config = JsonSerializer.Deserialize<PreprConfig>(PreprConfig.DefaultConfigJson);
         Assert.NotNull(config);
         Assert.Equal(5, config.Threshold);
         Assert.Equal("report.prepr", config.OutputFile);

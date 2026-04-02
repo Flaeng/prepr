@@ -1,6 +1,4 @@
-using prepr;
-
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 public class PromptReporterTests
 {

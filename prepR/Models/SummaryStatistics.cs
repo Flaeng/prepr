@@ -1,4 +1,4 @@
-namespace prepr;
+namespace Prepr.Models;
 
 public record SummaryStatistics(
     int TotalDuplicateBlocks,

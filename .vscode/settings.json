@@ -5,7 +5,7 @@
         "matchCommandLine": true
       },
       "dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj": true,
-      "/^(cd C:\\\\repos\\\\prepr; )?dotnet build prepr(\\.Tests)?/prepr(\\.Tests)?\\.csproj( 2>&1)?$/": {
+      "/^dotnet build prepr(\\.Tests)?/prepr(\\.Tests)?\\.csproj( 2>&1)?$/": {
         "approve": true,
         "matchCommandLine": true
       },
@@ -17,23 +17,31 @@
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet run --project prepr/prepr\\.csproj -- prepr 2>&1 \\| Select-Object -Last 40$/": {
+      "/^dotnet run --project prepr/prepr\\.csproj -- prepr 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj --filter \"WriteToFileTests\"$/": {
+      "/^dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj --filter \"[A-Za-z]+\"$/": {
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj --no-restore 2>&1 \\| Select-String -Pattern \"Passed\\|Failed\\|Total\\|Error\" \\| Select-Object -First 10$/": {
+      "/^dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj( --no-restore)? 2>&1 \\| Select-String -Pattern \"[A-Za-z]+(\\|[A-Za-z]+)*\" \\| Select-Object -First [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj --no-restore$/": {
+      "/^dotnet test prepr\\.Tests/prepr\\.Tests\\.csproj( --no-restore)?$/": {
         "approve": true,
         "matchCommandLine": true
       },
       "/^dotnet clean prepr/prepr\\.csproj -q; dotnet build prepr/prepr\\.csproj$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepR\\.Tests\\.csproj( --no-restore)? 2>&1 \\| Select-Object -Last [0-9]+$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepR\\.Tests\\.csproj --filter \"[A-Za-z]+\"( --no-restore)? 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       }

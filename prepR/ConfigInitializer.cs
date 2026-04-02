@@ -1,4 +1,4 @@
-namespace prepr;
+namespace Prepr;
 
 public static class ConfigInitializer
 {
@@ -12,7 +12,7 @@ public static class ConfigInitializer
             return true;
         }
         Directory.CreateDirectory(directoryPath);
-        File.WriteAllText(configPath, preprConfig.DefaultConfigJson);
+        File.WriteAllText(configPath, PreprConfig.DefaultConfigJson);
         Console.WriteLine($"Config file created: {configPath}");
         return true;
     }

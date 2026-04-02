@@ -1,8 +1,8 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 
-namespace prepr;
+namespace Prepr;
 
-public static class FileDiscovery
+public class FileDiscovery
 {
     private static readonly HashSet<string> DefaultExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -12,33 +12,36 @@ public static class FileDiscovery
         ".razor", ".cshtml", ".vue", ".svelte", ".php"
     };
 
-    public static IReadOnlyList<string> DiscoverFiles(
-        string rootPath,
-        RunOptions runOptions,
-        TextWriter? progressWriter = null)
-        => DiscoverFiles(rootPath, runOptions.Extensions, runOptions.ExcludeExtensions, runOptions.IgnorePaths, progressWriter);
+    private readonly string _rootPath;
+    private readonly RunOptions _runOptions;
+    private readonly TextWriter? _progressWriter;
 
-    public static IReadOnlyList<string> DiscoverFiles(
-        string rootPath,
-        IEnumerable<string>? extensions = null,
-        IEnumerable<string>? excludeExtensions = null,
-        IEnumerable<string>? ignorePaths = null,
-        TextWriter? progressWriter = null)
+    private readonly HashSet<string> _allowedExtensions;
+    private readonly HashSet<string> _excludedExtensions;
+
+    public FileDiscovery(string rootPath, RunOptions runOptions, TextWriter? progressWriter = null)
     {
-        var allowedExtensions = extensions is not null
-            ? new HashSet<string>(extensions.Select(e => e.StartsWith('.') ? e : "." + e), StringComparer.OrdinalIgnoreCase)
+        _rootPath = rootPath;
+        _runOptions = runOptions;
+        _progressWriter = progressWriter;
+
+        _allowedExtensions = _runOptions.Extensions is not null
+            ? new HashSet<string>(_runOptions.Extensions.Select(e => e.StartsWith('.') ? e : "." + e), StringComparer.OrdinalIgnoreCase)
             : DefaultExtensions;
 
-        var excludedExtensions = excludeExtensions is not null
-            ? new HashSet<string>(excludeExtensions.Select(e => e.StartsWith('.') ? e : "." + e), StringComparer.OrdinalIgnoreCase)
-            : null;
+        _excludedExtensions = _runOptions.ExcludeExtensions is not null
+            ? new HashSet<string>(_runOptions.ExcludeExtensions.Select(e => e.StartsWith('.') ? e : "." + e), StringComparer.OrdinalIgnoreCase)
+            : [];
+    }
 
+    public IReadOnlyList<string> DiscoverFiles()
+    {
         var ignoredDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         Matcher? globMatcher = null;
-        if (ignorePaths is not null)
+        if (_runOptions.IgnorePaths is not null)
         {
             var globPatterns = new List<string>();
-            foreach (var pattern in ignorePaths)
+            foreach (var pattern in _runOptions.IgnorePaths)
             {
                 // Patterns containing glob characters or path separators are treated as globs
                 if (pattern.Contains('*') || pattern.Contains('?') || pattern.Contains('/') || pattern.Contains('\\'))
@@ -55,19 +58,17 @@ public static class FileDiscovery
         }
 
         // Count directories for progress reporting
-        int totalDirs = 0;
         int processedDirs = 0;
         ProgressBar? bar = null;
-        if (progressWriter is not null)
+        if (_progressWriter is not null)
         {
-            totalDirs = CountDirectories(rootPath, ignoredDirs);
+            var totalDirs = CountDirectories(_rootPath, ignoredDirs);
             if (totalDirs > 0)
-                bar = new ProgressBar(progressWriter, totalDirs);
+                bar = new ProgressBar(_progressWriter, totalDirs);
         }
 
         var files = new List<string>();
-        CollectFiles(rootPath, rootPath, allowedExtensions, excludedExtensions, ignoredDirs, globMatcher, files,
-            bar, ref processedDirs);
+        CollectFiles(_rootPath, ignoredDirs, globMatcher, files, bar, ref processedDirs);
 
         bar?.Complete();
 
@@ -79,11 +80,8 @@ public static class FileDiscovery
         int count = 1; // count self
         try
         {
-            foreach (var subDir in Directory.EnumerateDirectories(directory))
+            foreach (var subDir in GetUnignoredDirectories(directory, ignoredDirs))
             {
-                var dirName = Path.GetFileName(subDir);
-                if (ignoredDirs.Contains(dirName))
-                    continue;
                 count += CountDirectories(subDir, ignoredDirs);
             }
         }
@@ -92,11 +90,19 @@ public static class FileDiscovery
         return count;
     }
 
-    private static void CollectFiles(
+    private static IEnumerable<string> GetUnignoredDirectories(string directory, HashSet<string> ignoredDirs)
+    {
+        foreach (var subDir in Directory.EnumerateDirectories(directory))
+        {
+            var dirName = Path.GetFileName(subDir);
+            if (ignoredDirs.Contains(dirName))
+                continue;
+            yield return subDir;
+        }
+    }
+
+    private void CollectFiles(
         string directory,
-        string rootPath,
-        HashSet<string> allowedExtensions,
-        HashSet<string>? excludedExtensions,
         HashSet<string> ignoredDirs,
         Matcher? globMatcher,
         List<string> results,
@@ -108,13 +114,15 @@ public static class FileDiscovery
             foreach (var file in Directory.EnumerateFiles(directory))
             {
                 var ext = Path.GetExtension(file);
-                if (!allowedExtensions.Contains(ext))
+                if (!_allowedExtensions.Contains(ext))
                     continue;
-                if (excludedExtensions is not null && excludedExtensions.Contains(ext))
+
+                if (_excludedExtensions is not null && _excludedExtensions.Contains(ext))
                     continue;
+
                 if (globMatcher is not null)
                 {
-                    var relativePath = Path.GetRelativePath(rootPath, file);
+                    var relativePath = Path.GetRelativePath(_rootPath, file);
                     if (globMatcher.Match(relativePath).HasMatches)
                         continue;
                 }
@@ -124,13 +132,9 @@ public static class FileDiscovery
             processedDirs++;
             bar?.Update(processedDirs, "Discovering files...");
 
-            foreach (var subDir in Directory.EnumerateDirectories(directory))
+            foreach (var subDir in GetUnignoredDirectories(directory, ignoredDirs))
             {
-                var dirName = Path.GetFileName(subDir);
-                if (ignoredDirs.Contains(dirName))
-                    continue;
-                CollectFiles(subDir, rootPath, allowedExtensions, excludedExtensions, ignoredDirs, globMatcher, results,
-                    bar, ref processedDirs);
+                CollectFiles(subDir, ignoredDirs, globMatcher, results, bar, ref processedDirs);
             }
         }
         catch (UnauthorizedAccessException)

@@ -1,8 +1,6 @@
 using System.CommandLine;
-using System.CommandLine.Parsing;
 
-using prepr;
-using static prepr.CliSymbols;
+using static Prepr.CliSymbols;
 
 var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks across files in a folder.")
 {
@@ -50,10 +48,7 @@ rootCommand.SetAction((ParseResult parse) =>
     var showProgress = reportOptions.Verbosity != Verbosity.Quiet && !Console.IsErrorRedirected;
     TextWriter? progressWriter = showProgress ? Console.Error : null;
 
-    var files = FileDiscovery.DiscoverFiles(
-        path.FullName,
-        runOptions,
-        progressWriter);
+    var files = new FileDiscovery(path.FullName, runOptions, progressWriter).DiscoverFiles();
 
     if (files.Count == 0)
     {
@@ -80,14 +75,11 @@ rootCommand.SetAction((ParseResult parse) =>
     }
 
     // CI exit code: exit 2 if any file exceeds line limit
-    if (reportOptions.LineLimitRule is not null)
+    var overLimit = OverLimitFileInfo.Compute(result, reportOptions, path.FullName);
+    if (overLimit.Count > 0)
     {
-        var overLimit = OverLimitFileInfo.Compute(result, reportOptions.LineLimitRule, path.FullName);
-        if (overLimit.Count > 0)
-        {
-            Console.Error.WriteLine($"Error: {overLimit.Count} file(s) exceed the maximum line limit.");
-            Environment.ExitCode = 2;
-        }
+        Console.Error.WriteLine($"Error: {overLimit.Count} file(s) exceed the maximum line limit.");
+        Environment.ExitCode = 2;
     }
 });
 

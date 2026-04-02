@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace prepr.Tests;
+namespace Prepr.Tests;
 
 public class WriteToFileTests
 {

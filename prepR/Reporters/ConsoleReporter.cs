@@ -1,7 +1,8 @@
-namespace prepr;
+namespace Prepr.Reporters;
 
 public class ConsoleReporter : IReporter
 {
+    public string FileExtension => string.Empty;
     public void Report(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         Print(result, rootPath, options);
@@ -36,31 +37,7 @@ public class ConsoleReporter : IReporter
             return;
         }
 
-        for (int i = 0; i < result.Duplicates.Count; i++)
-        {
-            var block = result.Duplicates[i];
-            Console.WriteLine();
-            WriteLine($"Block #{i + 1}  ({block.Lines.Length} lines, {block.Locations.Count} occurrences)", ConsoleColor.Yellow);
-            Console.WriteLine();
-
-            foreach (var line in block.Lines)
-            {
-                Write("  │ ", ConsoleColor.DarkGray);
-                Console.WriteLine(Truncate(line, 120));
-            }
-
-            Console.WriteLine();
-
-            foreach (var loc in block.Locations)
-            {
-                var relativePath = Path.GetRelativePath(rootPath, loc.FilePath);
-                Write("  → ", ConsoleColor.DarkGray);
-                WriteLine($"{relativePath}:{loc.StartLine}-{loc.EndLine}", ConsoleColor.Cyan);
-            }
-
-            if (i < result.Duplicates.Count - 1)
-                Console.WriteLine(new string('─', 60));
-        }
+        WriteDuplicates(result, rootPath);
 
         // Per-file summary with severity
         Console.WriteLine();
@@ -88,36 +65,7 @@ public class ConsoleReporter : IReporter
         var pairs = FilePairGroup.ComputeFilePairs(result);
         if (pairs.Count > 0)
         {
-            Console.WriteLine();
-            Console.WriteLine(new string('─', 60));
-            WriteLine("File Pairs", ConsoleColor.White);
-            Console.WriteLine();
-
-            foreach (var pair in pairs)
-            {
-                var relA = Path.GetRelativePath(rootPath, pair.FileA);
-                var relB = Path.GetRelativePath(rootPath, pair.FileB);
-                Write("  ", ConsoleColor.DarkGray);
-                Write($"{relA}", ConsoleColor.Cyan);
-                Write(" ↔ ", ConsoleColor.DarkGray);
-                Write($"{relB}", ConsoleColor.Cyan);
-                WriteLine($"  {pair.SharedBlocks.Count} shared block(s), {pair.SharedLineCount} line(s)", ConsoleColor.Gray);
-
-                if (options.Verbosity == Verbosity.Detailed)
-                {
-                    foreach (var block in pair.SharedBlocks)
-                    {
-                        var locA = block.Locations.FirstOrDefault(l => l.FilePath == pair.FileA);
-                        var locB = block.Locations.FirstOrDefault(l => l.FilePath == pair.FileB);
-                        Write("    ", ConsoleColor.DarkGray);
-                        Write($"Block ({block.Lines.Length} lines): ", ConsoleColor.Yellow);
-                        if (locA is not null) Write($"{relA}:{locA.StartLine}-{locA.EndLine}", ConsoleColor.Cyan);
-                        Write(" ↔ ", ConsoleColor.DarkGray);
-                        if (locB is not null) Write($"{relB}:{locB.StartLine}-{locB.EndLine}", ConsoleColor.Cyan);
-                        Console.WriteLine();
-                    }
-                }
-            }
+            WritePairs(rootPath, options, pairs);
         }
 
         Console.WriteLine();
@@ -127,23 +75,92 @@ public class ConsoleReporter : IReporter
         // Files exceeding line limit
         if (options.LineLimitRule is not null)
         {
-            var overLimit = OverLimitFileInfo.Compute(result, options.LineLimitRule, rootPath);
-            if (overLimit.Count > 0)
+            WriteLineLimitRule(result, rootPath, options);
+        }
+    }
+
+    private static void WriteLineLimitRule(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
+        if (overLimit.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        WriteLine($"Files exceeding line limit ({overLimit.Count} file(s))", ConsoleColor.White);
+        Console.WriteLine();
+        foreach (var v in overLimit)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+            Write("  ", ConsoleColor.DarkGray);
+            Write("[!] ", ConsoleColor.Red);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  {v.LineCount} lines (limit: {v.Limit})", ConsoleColor.Gray);
+        }
+        Console.WriteLine();
+    }
+
+    private static void WritePairs(string rootPath, ReportOptions options, List<FilePairGroup> pairs)
+    {
+        Console.WriteLine();
+        Console.WriteLine(new string('─', 60));
+        WriteLine("File Pairs", ConsoleColor.White);
+        Console.WriteLine();
+
+        foreach (var pair in pairs)
+        {
+            var relA = Path.GetRelativePath(rootPath, pair.FileA);
+            var relB = Path.GetRelativePath(rootPath, pair.FileB);
+            Write("  ", ConsoleColor.DarkGray);
+            Write($"{relA}", ConsoleColor.Cyan);
+            Write(" ↔ ", ConsoleColor.DarkGray);
+            Write($"{relB}", ConsoleColor.Cyan);
+            WriteLine($"  {pair.SharedBlocks.Count} shared block(s), {pair.SharedLineCount} line(s)", ConsoleColor.Gray);
+
+            if (options.Verbosity == Verbosity.Detailed)
             {
-                Console.WriteLine(new string('\u2500', 60));
-                WriteLine($"Files exceeding line limit ({overLimit.Count} file(s))", ConsoleColor.White);
-                Console.WriteLine();
-                foreach (var v in overLimit)
+                foreach (var block in pair.SharedBlocks)
                 {
-                    var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-                    Write("  ", ConsoleColor.DarkGray);
-                    Write("[!] ", ConsoleColor.Red);
-                    Write($"{relativePath}", ConsoleColor.Cyan);
-                    WriteLine($"  {v.LineCount} lines (limit: {v.Limit})", ConsoleColor.Gray);
+                    var locA = block.Locations.FirstOrDefault(l => l.FilePath == pair.FileA);
+                    var locB = block.Locations.FirstOrDefault(l => l.FilePath == pair.FileB);
+                    Write("    ", ConsoleColor.DarkGray);
+                    Write($"Block ({block.Lines.Length} lines): ", ConsoleColor.Yellow);
+                    if (locA is not null) Write($"{relA}:{locA.StartLine}-{locA.EndLine}", ConsoleColor.Cyan);
+                    Write(" ↔ ", ConsoleColor.DarkGray);
+                    if (locB is not null) Write($"{relB}:{locB.StartLine}-{locB.EndLine}", ConsoleColor.Cyan);
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
             }
-        }    }
+        }
+    }
+
+    private static void WriteDuplicates(ScanResult result, string rootPath)
+    {
+        for (int i = 0; i < result.Duplicates.Count; i++)
+        {
+            var block = result.Duplicates[i];
+            Console.WriteLine();
+            WriteLine($"Block #{i + 1}  ({block.Lines.Length} lines, {block.Locations.Count} occurrences)", ConsoleColor.Yellow);
+            Console.WriteLine();
+
+            foreach (var line in block.Lines)
+            {
+                Write("  │ ", ConsoleColor.DarkGray);
+                Console.WriteLine(Truncate(line, 120));
+            }
+
+            Console.WriteLine();
+
+            foreach (var loc in block.Locations)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, loc.FilePath);
+                Write("  → ", ConsoleColor.DarkGray);
+                WriteLine($"{relativePath}:{loc.StartLine}-{loc.EndLine}", ConsoleColor.Cyan);
+            }
+
+            if (i < result.Duplicates.Count - 1)
+                Console.WriteLine(new string('─', 60));
+        }
+    }
 
     private static void PrintQuiet(SummaryStatistics stats, string rootPath)
     {
