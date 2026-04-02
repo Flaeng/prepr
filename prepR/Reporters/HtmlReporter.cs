@@ -119,7 +119,6 @@ public class HtmlReporter : IReporter
             <th class="px-6 py-4">File</th>
             <th class="px-6 py-4">Blocks</th>
             <th class="px-6 py-4">Duplicated Lines</th>
-            <th class="px-6 py-4">Duplication %</th>
             <th class="px-6 py-4">Severity</th>
             <th class="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -143,8 +142,7 @@ public class HtmlReporter : IReporter
                 <tr class="hover:bg-primary/5 transition-colors">
                 <td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td>
                 <td class="px-6 py-4">{info.DuplicateBlockCount}</td>
-                <td class="px-6 py-4">{info.DuplicatedLineCount}</td>
-                <td class="px-6 py-4">{info.DuplicationPercentage:F1}%</td>
+                <td class="px-6 py-4">{info.DuplicatedLineCount} lines ({info.DuplicationPercentage:F1}%)</td>
                 <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold {badgeClass}">{label}</span></td>
                 <td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show code</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td>
                 </tr>
@@ -157,7 +155,7 @@ public class HtmlReporter : IReporter
 
             if (fileBlocks.Count > 0)
             {
-                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="6" class="px-6 py-3"><div class="space-y-3">""");
+                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3"><div class="space-y-3">""");
                 foreach (var (block, idx) in fileBlocks)
                 {
                     var loc = block.Locations.First(l => l.FilePath == info.FilePath);

@@ -25,32 +25,31 @@ internal static class BlockConsolidator
                 continue;
             }
 
-            // Try to merge blocks that overlap or are adjacent in ALL their file locations.
-            // Use a greedy approach: keep merging until no more merges are possible.
-            bool merged = true;
-            while (merged)
-            {
-                merged = false;
-                for (int i = 0; i < groupBlocks.Count && !merged; i++)
-                {
-                    for (int j = i + 1; j < groupBlocks.Count && !merged; j++)
-                    {
-                        var mergedBlock = TryMergeBlocks(groupBlocks[i], groupBlocks[j], fileLines);
-                        if (mergedBlock is not null)
-                        {
-                            groupBlocks[i] = mergedBlock;
-                            groupBlocks.RemoveAt(j);
-                            merged = true;
-                        }
-                    }
-                }
-            }
-
+            while (TryMergeAnyPair(groupBlocks, fileLines)) ;
             result.AddRange(groupBlocks);
         }
 
         // Remove any block that is a strict subset of another block
         return RemoveSubsetBlocks(result);
+    }
+
+    private static bool TryMergeAnyPair(List<DuplicateBlock> groupBlocks,
+        IReadOnlyDictionary<string, IndexedLine[]> fileLines)
+    {
+        for (int i = 0; i < groupBlocks.Count; i++)
+        {
+            for (int j = i + 1; j < groupBlocks.Count; j++)
+            {
+                var mergedBlock = TryMergeBlocks(groupBlocks[i], groupBlocks[j], fileLines);
+                if (mergedBlock is null)
+                    continue;
+
+                groupBlocks[i] = mergedBlock;
+                groupBlocks.RemoveAt(j);
+                return true;
+            }
+        }
+        return false;
     }
 
     private static DuplicateBlock? TryMergeBlocks(DuplicateBlock a, DuplicateBlock b,
