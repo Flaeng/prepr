@@ -102,4 +102,14 @@ public static class CliSymbols
     public static readonly Option<int?> MaxCommentDensityOption = new("--max-comment-density")
     {
         Description = "Maximum allowed comment density (%). Files above this threshold are reported. Exits with code 2 if any file exceeds the limit."
+    };
+
+    public static readonly Option<int?> MaxMagicNumbersOption = new("--max-magic-numbers")
+    {
+        Description = "Maximum allowed magic numbers per file. Files exceeding this limit are reported. Exits with code 2 if any file exceeds the limit."
+    };
+
+    public static readonly Option<int?> MaxMagicStringsOption = new("--max-magic-strings")
+    {
+        Description = "Maximum allowed repeated string literal occurrences per file before flagging. Exits with code 2 if any file exceeds the limit."
     };}

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Prepr;
 
@@ -6,22 +7,24 @@ public static class ConfigLoader
 {
     public const string ConfigFileName = ".preprrc";
 
+    private static readonly JsonSerializerOptions DeserializeOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public static PreprConfig LoadConfig(string startDirectory)
     {
         var configPath = FindConfigFile(startDirectory);
         if (configPath is null)
-            return new PreprConfig();
+            return JsonSerializer.Deserialize<PreprConfig>(PreprConfig.DefaultConfigJson, DeserializeOptions)!;
 
         try
         {
             var json = File.ReadAllText(configPath);
-            var config = JsonSerializer.Deserialize<PreprConfig>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            var config = MergeWithDefaults(json);
 
             if (config is null)
-                return new PreprConfig();
+                return JsonSerializer.Deserialize<PreprConfig>(PreprConfig.DefaultConfigJson, DeserializeOptions)!;
 
             ValidateConfig(config, configPath);
             Console.Error.WriteLine($"Using config: {configPath}");
@@ -30,8 +33,24 @@ public static class ConfigLoader
         catch (JsonException ex)
         {
             Console.Error.WriteLine($"Warning: Invalid JSON in '{configPath}': {ex.Message}. Using defaults.");
-            return new PreprConfig();
+            return JsonSerializer.Deserialize<PreprConfig>(PreprConfig.DefaultConfigJson, DeserializeOptions)!;
         }
+    }
+
+    internal static PreprConfig? MergeWithDefaults(string userJson)
+    {
+        var defaultNode = JsonNode.Parse(PreprConfig.DefaultConfigJson)!.AsObject();
+        var userNode = JsonNode.Parse(userJson)?.AsObject();
+
+        if (userNode is null)
+            return null;
+
+        foreach (var property in userNode)
+        {
+            defaultNode[property.Key] = property.Value?.DeepClone();
+        }
+
+        return JsonSerializer.Deserialize<PreprConfig>(defaultNode.ToJsonString(), DeserializeOptions);
     }
 
     private static void ValidateConfig(PreprConfig config, string configPath)

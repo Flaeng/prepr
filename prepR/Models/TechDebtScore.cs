@@ -7,7 +7,9 @@ public record TechDebtScore(
     double LineLimitDensity,
     double IndentationDensity,
     double EarlyReturnDensity,
-    double CommentDensityDensity)
+    double CommentDensityDensity,
+    double MagicNumberDensity,
+    double MagicStringDensity)
 {
     public static TechDebtScore Compute(ScanResult result, ReportOptions options, string rootPath)
     {
@@ -53,15 +55,33 @@ public record TechDebtScore(
             commentDensityDensity = Math.Min(100.0, (double)commentViolations.Count / totalFiles * 100);
         }
 
+        // Magic number density: % of files with magic number violations
+        double magicNumberDensity = 0;
+        if (options.MagicNumberRule is not null && totalFiles > 0)
+        {
+            var magicNumberViolations = MagicNumberFileInfo.Compute(result, options, rootPath);
+            magicNumberDensity = Math.Min(100.0, (double)magicNumberViolations.Count / totalFiles * 100);
+        }
+
+        // Magic string density: % of files with magic string violations
+        double magicStringDensity = 0;
+        if (options.MagicStringRule is not null && totalFiles > 0)
+        {
+            var magicStringViolations = MagicStringFileInfo.Compute(result, options, rootPath);
+            magicStringDensity = Math.Min(100.0, (double)magicStringViolations.Count / totalFiles * 100);
+        }
+
         double score = options.TechDebtWeightDuplication / 100.0 * dupDensity
                      + options.TechDebtWeightLineLimit / 100.0 * lineLimitDensity
                      + options.TechDebtWeightIndentation / 100.0 * indentDensity
                      + options.TechDebtWeightEarlyReturn / 100.0 * earlyReturnDensity
-                     + options.TechDebtWeightCommentDensity / 100.0 * commentDensityDensity;
+                     + options.TechDebtWeightCommentDensity / 100.0 * commentDensityDensity
+                     + options.TechDebtWeightMagicNumber / 100.0 * magicNumberDensity
+                     + options.TechDebtWeightMagicString / 100.0 * magicStringDensity;
 
         score = Math.Round(Math.Min(100.0, score), 1);
 
-        return new TechDebtScore(score, GetGrade(score), dupDensity, lineLimitDensity, indentDensity, earlyReturnDensity, commentDensityDensity);
+        return new TechDebtScore(score, GetGrade(score), dupDensity, lineLimitDensity, indentDensity, earlyReturnDensity, commentDensityDensity, magicNumberDensity, magicStringDensity);
     }
 
     public static char GetGrade(double score) => score switch

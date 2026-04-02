@@ -44,6 +44,7 @@ dotnet run --project prepr -- <path> [options]
 ## Conventions
 
 - **Config hierarchy:** CLI args override `.preprrc` config file, which overrides built-in defaults
+- **Config merging:** When a `.preprrc` file exists, it is merged on top of built-in defaults (`PreprConfig.DefaultConfigJson`). Properties **missing** from the file keep their default values. Properties **explicitly set to `null`** disable/clear that rule. This applies to all config properties — scalar values, arrays, and dictionary-based rules alike.
 - **Exit codes:** 0 = success, 1 = config/directory error, 2 = thresholds exceeded
 - **Severity levels:** Low/Medium/High based on configurable thresholds for each rule
 - **Package versions** are centrally managed in `Directory.Packages.props`

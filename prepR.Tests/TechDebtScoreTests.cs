@@ -18,7 +18,9 @@ public class TechDebtScoreTests
             fileLineCounts ?? new Dictionary<string, int>(),
             fileMaxNestingDepths ?? new Dictionary<string, NestingDepthInfo>(),
             earlyReturnViolations ?? new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
-            fileCommentLineCounts ?? new Dictionary<string, int>());
+            fileCommentLineCounts ?? new Dictionary<string, int>(),
+            new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
     }
 
     [Fact]
@@ -45,9 +47,9 @@ public class TechDebtScoreTests
 
         var score = TechDebtScore.Compute(result, new ReportOptions(), "/root");
 
-        // 10 duplicated lines / 100 total = 10% density, weighted at 30% = 3.0
+        // 10 duplicated lines / 100 total = 10% density, weighted at 25% = 2.5
         Assert.Equal(10, score.DuplicationDensity);
-        Assert.Equal(3.0, score.Score);
+        Assert.Equal(2.5, score.Score);
         Assert.Equal('A', score.Grade);
     }
 
@@ -81,9 +83,9 @@ public class TechDebtScoreTests
         var options = new ReportOptions(EarlyReturn: true);
         var score = TechDebtScore.Compute(result, options, "/root");
 
-        // 2 files with violations / 10 total files = 20%, weighted at 15% = 3.0
+        // 2 files with violations / 10 total files = 20%, weighted at 13% = 2.6
         Assert.Equal(20, score.EarlyReturnDensity);
-        Assert.Equal(3.0, score.Score);
+        Assert.Equal(2.6, score.Score);
     }
 
     [Fact]
@@ -166,10 +168,10 @@ public class TechDebtScoreTests
         var options = new ReportOptions(EarlyReturn: true);
         var score = TechDebtScore.Compute(result, options, "/root");
 
-        // Duplication: 10/100 = 10% * 0.3 = 3.0
-        // Early return: 1/10 = 10% * 0.15 = 1.5
-        // Total = 4.5
-        Assert.Equal(4.5, score.Score);
+        // Duplication: 10/100 = 10% * 0.25 = 2.5
+        // Early return: 1/10 = 10% * 0.13 = 1.3
+        // Total = 3.8
+        Assert.Equal(3.8, score.Score);
         Assert.Equal('A', score.Grade);
     }
 }

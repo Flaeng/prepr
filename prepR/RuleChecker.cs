@@ -1,8 +1,9 @@
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 
 namespace Prepr;
 
-public static class RuleChecker
+public static partial class RuleChecker
 {
     private const int DefaultMinConsecutiveLines = 5;
 
@@ -10,12 +11,12 @@ public static class RuleChecker
         TextWriter? progressWriter = null,
         ScanCache? cache = null)
     {
-        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, totalLines) = ReadFiles(filePaths, progressWriter, cache);
+        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, totalLines) = ReadFiles(filePaths, progressWriter, cache);
         var duplicates = DuplicateDetector.Detect(fileLines, minConsecutiveLines, progressWriter);
-        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts);
+        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations);
     }
 
-    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, NestingDepthInfo> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, IReadOnlyDictionary<string, int> fileCommentLineCounts, int totalLines)
+    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, NestingDepthInfo> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, IReadOnlyDictionary<string, int> fileCommentLineCounts, IReadOnlyDictionary<string, IReadOnlyList<MagicNumberViolation>> magicNumberViolations, IReadOnlyDictionary<string, IReadOnlyList<MagicStringViolation>> magicStringViolations, int totalLines)
         ReadFiles(IReadOnlyList<string> filePaths,
             TextWriter? progressWriter,
             ScanCache? cache)
@@ -25,6 +26,8 @@ public static class RuleChecker
         var fileMaxNestingDepths = new ConcurrentDictionary<string, NestingDepthInfo>();
         var earlyReturnViolations = new ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>>();
         var fileCommentLineCounts = new ConcurrentDictionary<string, int>();
+        var magicNumberViolations = new ConcurrentDictionary<string, IReadOnlyList<MagicNumberViolation>>();
+        var magicStringViolations = new ConcurrentDictionary<string, IReadOnlyList<MagicStringViolation>>();
         int totalLines = 0;
         int fileCount = filePaths.Count;
         int filesRead = 0;
@@ -35,7 +38,7 @@ public static class RuleChecker
 
         Parallel.ForEach(filePaths, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, path =>
         {
-            ReadSingleFile(path, cache, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts);
+            ReadSingleFile(path, cache, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations);
 
             int current = Interlocked.Increment(ref filesRead);
             bar?.Update(current, "Reading files...");
@@ -43,7 +46,7 @@ public static class RuleChecker
 
         bar?.Complete();
 
-        return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, totalLines);
+        return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, totalLines);
     }
 
     private static void ReadSingleFile(string path, ScanCache? cache, ref int totalLines,
@@ -51,7 +54,9 @@ public static class RuleChecker
         ConcurrentDictionary<string, int> fileLineCounts,
         ConcurrentDictionary<string, NestingDepthInfo> fileMaxNestingDepths,
         ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations,
-        ConcurrentDictionary<string, int> fileCommentLineCounts)
+        ConcurrentDictionary<string, int> fileCommentLineCounts,
+        ConcurrentDictionary<string, IReadOnlyList<MagicNumberViolation>> magicNumberViolations,
+        ConcurrentDictionary<string, IReadOnlyList<MagicStringViolation>> magicStringViolations)
     {
         try
         {
@@ -81,6 +86,8 @@ public static class RuleChecker
             fileMaxNestingDepths[path] = ComputeMaxNestingDepth(indexed);
             earlyReturnViolations[path] = EarlyReturnAnalyzer.Analyze(indexed);
             fileCommentLineCounts[path] = CountCommentLines(indexed);
+            magicNumberViolations[path] = FindMagicNumbers(indexed);
+            magicStringViolations[path] = FindMagicStrings(indexed);
         }
         catch (UnauthorizedAccessException)
         {
@@ -234,5 +241,88 @@ public static class RuleChecker
         }
 
         return commentLines;
+    }
+
+    [GeneratedRegex(@"(?<!\w)(?:(?:0[xX][0-9a-fA-F]+)|(?:0[bB][01]+)|(?:\d+\.\d+)|(?:\d+))(?:[fFdDmMlLuU]*)(?!\w)", RegexOptions.Compiled)]
+    private static partial Regex MagicNumberRegex();
+
+    internal static IReadOnlyList<MagicNumberViolation> FindMagicNumbers(IndexedLine[] lines)
+    {
+        var violations = new List<MagicNumberViolation>();
+        bool inBlockComment = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Text.TrimStart();
+
+            if (inBlockComment)
+            {
+                if (trimmed.Contains("*/"))
+                    inBlockComment = false;
+                continue;
+            }
+
+            if (trimmed.StartsWith("//"))
+                continue;
+
+            if (trimmed.StartsWith("/*"))
+            {
+                var afterOpen = trimmed[(trimmed.IndexOf("/*") + 2)..];
+                if (!afterOpen.Contains("*/"))
+                    inBlockComment = true;
+                continue;
+            }
+
+            foreach (Match match in MagicNumberRegex().Matches(line.Text))
+            {
+                violations.Add(new MagicNumberViolation(line.LineNumber, match.Value, trimmed));
+            }
+        }
+
+        return violations;
+    }
+
+    [GeneratedRegex(@"""([^""\\]*(?:\\.[^""\\]*)*)""", RegexOptions.Compiled)]
+    private static partial Regex StringLiteralRegex();
+
+    internal static IReadOnlyList<MagicStringViolation> FindMagicStrings(IndexedLine[] lines)
+    {
+        var violations = new List<MagicStringViolation>();
+        bool inBlockComment = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Text.TrimStart();
+
+            if (inBlockComment)
+            {
+                if (trimmed.Contains("*/"))
+                    inBlockComment = false;
+                continue;
+            }
+
+            if (trimmed.StartsWith("//"))
+                continue;
+
+            if (trimmed.StartsWith("/*"))
+            {
+                var afterOpen = trimmed[(trimmed.IndexOf("/*") + 2)..];
+                if (!afterOpen.Contains("*/"))
+                    inBlockComment = true;
+                continue;
+            }
+
+            foreach (Match match in StringLiteralRegex().Matches(line.Text))
+            {
+                var value = match.Groups[1].Value;
+                // Skip empty strings and single characters
+                if (value.Length <= 1)
+                    continue;
+
+                violations.Add(new MagicStringViolation(line.LineNumber, value, trimmed));
+            }
+        }
+
+        return violations;
     }
 }

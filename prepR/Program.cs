@@ -22,7 +22,9 @@ var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks ac
     EarlyReturnOption,
     MaxTechDebtScoreOption,
     MinCommentDensityOption,
-    MaxCommentDensityOption
+    MaxCommentDensityOption,
+    MaxMagicNumbersOption,
+    MaxMagicStringsOption
 };
 
 rootCommand.SetAction((ParseResult parse) =>
@@ -109,6 +111,24 @@ rootCommand.SetAction((ParseResult parse) =>
     if (commentDensityViolations.Count > 0)
     {
         Console.Error.WriteLine($"Error: {commentDensityViolations.Count} file(s) violate comment density limits.");
+        Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if any magic number violations found
+    var magicNumberViolations = MagicNumberFileInfo.Compute(result, reportOptions, path.FullName);
+    if (magicNumberViolations.Count > 0)
+    {
+        var totalMagicNumbers = magicNumberViolations.Sum(f => f.Violations.Count);
+        Console.Error.WriteLine($"Error: {totalMagicNumbers} magic number(s) found in {magicNumberViolations.Count} file(s).");
+        Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if any magic string violations found
+    var magicStringViolations = MagicStringFileInfo.Compute(result, reportOptions, path.FullName);
+    if (magicStringViolations.Count > 0)
+    {
+        var totalMagicStrings = magicStringViolations.Sum(f => f.Violations.Count);
+        Console.Error.WriteLine($"Error: {totalMagicStrings} magic string occurrence(s) found in {magicStringViolations.Count} file(s).");
         Environment.ExitCode = 2;
     }
 

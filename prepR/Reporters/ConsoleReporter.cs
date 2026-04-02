@@ -106,6 +106,18 @@ public class ConsoleReporter : IReporter
             WriteCommentDensityRule(result, rootPath, options);
         }
 
+        // Magic number violations
+        if (options.MagicNumberRule is not null)
+        {
+            WriteMagicNumberRule(result, rootPath, options);
+        }
+
+        // Magic string violations
+        if (options.MagicStringRule is not null)
+        {
+            WriteMagicStringRule(result, rootPath, options);
+        }
+
         // Tech Debt Score
         WriteTechDebtScore(result, rootPath, options);
     }
@@ -234,6 +246,80 @@ public class ConsoleReporter : IReporter
             Write($"[{v.Severity}] ", severityColor);
             Write($"{relativePath}", ConsoleColor.Cyan);
             WriteLine($"  {v.DensityPercent:F1}% ({direction}: {v.LimitPercent:F1}%)", ConsoleColor.Gray);
+        }
+        Console.WriteLine();
+    }
+
+    private static void WriteMagicNumberRule(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var violations = MagicNumberFileInfo.Compute(result, options, rootPath);
+        if (violations.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        var highMN = violations.Count(v => v.Severity == Severity.High);
+        var medMN = violations.Count(v => v.Severity == Severity.Medium);
+        var lowMN = violations.Count(v => v.Severity == Severity.Low);
+        var totalViolations = violations.Sum(v => v.Violations.Count);
+        Write($"Magic Numbers ({totalViolations} in {violations.Count} file(s))", ConsoleColor.White);
+        WriteSeverityCounts(highMN, medMN, lowMN);
+        Console.WriteLine();
+        foreach (var file in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            var severityColor = file.Severity switch
+            {
+                Severity.High => ConsoleColor.Red,
+                Severity.Medium => ConsoleColor.Yellow,
+                _ => ConsoleColor.Green
+            };
+            Write("  ", ConsoleColor.DarkGray);
+            Write($"[{file.Severity}] ", severityColor);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  {file.Violations.Count} magic number(s) (limit: {file.Limit})", ConsoleColor.Gray);
+            foreach (var v in file.Violations)
+            {
+                Write("      ", ConsoleColor.DarkGray);
+                Write($"Line {v.LineNumber}: ", ConsoleColor.Yellow);
+                WriteLine(v.Value, ConsoleColor.Gray);
+            }
+        }
+        Console.WriteLine();
+    }
+
+    private static void WriteMagicStringRule(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var violations = MagicStringFileInfo.Compute(result, options, rootPath);
+        if (violations.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        var highMS = violations.Count(v => v.Severity == Severity.High);
+        var medMS = violations.Count(v => v.Severity == Severity.Medium);
+        var lowMS = violations.Count(v => v.Severity == Severity.Low);
+        var totalViolations = violations.Sum(v => v.Violations.Count);
+        Write($"Magic Strings ({totalViolations} in {violations.Count} file(s))", ConsoleColor.White);
+        WriteSeverityCounts(highMS, medMS, lowMS);
+        Console.WriteLine();
+        foreach (var file in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            var severityColor = file.Severity switch
+            {
+                Severity.High => ConsoleColor.Red,
+                Severity.Medium => ConsoleColor.Yellow,
+                _ => ConsoleColor.Green
+            };
+            Write("  ", ConsoleColor.DarkGray);
+            Write($"[{file.Severity}] ", severityColor);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  {file.Violations.Count} magic string(s) (limit: {file.Limit})", ConsoleColor.Gray);
+            foreach (var v in file.Violations)
+            {
+                Write("      ", ConsoleColor.DarkGray);
+                Write($"Line {v.LineNumber}: ", ConsoleColor.Yellow);
+                WriteLine($"\"{v.Value}\"", ConsoleColor.Gray);
+            }
         }
         Console.WriteLine();
     }

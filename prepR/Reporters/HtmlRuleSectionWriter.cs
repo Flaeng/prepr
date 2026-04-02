@@ -303,9 +303,6 @@ internal static class HtmlRuleSectionWriter
             <th class="px-6 py-3">File</th>
             <th class="px-6 py-3 text-right">Comments</th>
             <th class="px-6 py-3 text-right">Total Lines</th>
-            <th class="px-6 py-3 text-right">Density %</th>
-            <th class="px-6 py-3 text-right">Limit %</th>
-            <th class="px-6 py-3">Direction</th>
             <th class="px-6 py-3">Severity</th>
             <th class="px-6 py-3 text-right">Actions</th>
             </tr>
@@ -317,8 +314,147 @@ internal static class HtmlRuleSectionWriter
             {
                 var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
                 var prompt = WebUtility.HtmlEncode(v.GetPrompt(relativePath));
-                var direction = v.IsBelowMin ? "Below min" : "Above max";
-                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{v.CommentLines}</td><td class="px-6 py-4 text-right text-on-surface-variant">{v.TotalLines}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{v.DensityPercent:F1}%</td><td class="px-6 py-4 text-right text-on-surface-variant">{v.LimitPercent:F1}%</td><td class="px-6 py-4 text-on-surface-variant">{direction}</td>{SeverityCell(v.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
+                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{v.CommentLines}</td><td class="px-6 py-4 text-right text-on-surface-variant">{v.TotalLines}</td>{SeverityCell(v.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
+            }
+
+            writer.Write("""
+            </tbody>
+            </table>
+            </div>
+            """);
+        }
+
+        writer.Write("""
+            </div>
+            </details>
+            """);
+    }
+
+    internal static void WriteMagicNumberRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = MagicNumberFileInfo.Compute(result, options, rootPath);
+        var highCount = violations.Count(v => v.Severity == Severity.High);
+        var mediumCount = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCount = violations.Count(v => v.Severity == Severity.Low);
+
+        writer.Write($"""
+            <details class="group border border-outline-variant/20 rounded-xl bg-surface-container-low overflow-hidden">
+            <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container-high/30 transition-colors">
+            <div class="flex items-center gap-4">
+            <div class="h-8 w-1 bg-primary"></div>
+            <h2 class="font-headline text-3xl font-bold text-on-surface uppercase tracking-tight">Magic Numbers</h2>
+            {SeverityBadges(highCount, mediumCount, lowCount)}
+            </div>
+            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+            </summary>
+            <div class="p-8 pt-0">
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine("""<p class="text-secondary italic">No violations found.</p>""");
+        }
+        else
+        {
+            writer.Write("""
+            <div class="rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container">
+            <table class="w-full text-left text-sm">
+            <thead>
+            <tr class="bg-surface-container-high/50 text-on-surface-variant font-label uppercase text-[10px] tracking-widest border-b border-outline-variant/20">
+            <th class="px-6 py-3">File</th>
+            <th class="px-6 py-3 text-right">Count</th>
+            <th class="px-6 py-3 text-right">Limit</th>
+            <th class="px-6 py-3">Severity</th>
+            <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/10">
+            """);
+
+            for (int i = 0; i < violations.Count; i++)
+            {
+                var file = violations[i];
+                var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+                var prompt = WebUtility.HtmlEncode(file.GetPrompt(relativePath));
+                var codeId = $"magic-number-{i}";
+                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{file.Violations.Count}</td><td class="px-6 py-4 text-right text-on-surface-variant">{file.Limit}</td>{SeverityCell(file.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show details</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
+
+                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3"><div class="space-y-1">""");
+                foreach (var v in file.Violations)
+                {
+                    writer.WriteLine($"""<div class="text-xs"><span class="text-on-surface-variant">Line {v.LineNumber}:</span> <span class="font-mono text-tertiary">{WebUtility.HtmlEncode(v.Value)}</span></div>""");
+                }
+                writer.Write("</div></td></tr>");
+            }
+
+            writer.Write("""
+            </tbody>
+            </table>
+            </div>
+            """);
+        }
+
+        writer.Write("""
+            </div>
+            </details>
+            """);
+    }
+
+    internal static void WriteMagicStringRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = MagicStringFileInfo.Compute(result, options, rootPath);
+        var highCount = violations.Count(v => v.Severity == Severity.High);
+        var mediumCount = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCount = violations.Count(v => v.Severity == Severity.Low);
+
+        writer.Write($"""
+            <details class="group border border-outline-variant/20 rounded-xl bg-surface-container-low overflow-hidden">
+            <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container-high/30 transition-colors">
+            <div class="flex items-center gap-4">
+            <div class="h-8 w-1 bg-primary"></div>
+            <h2 class="font-headline text-3xl font-bold text-on-surface uppercase tracking-tight">Magic Strings</h2>
+            {SeverityBadges(highCount, mediumCount, lowCount)}
+            </div>
+            <span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+            </summary>
+            <div class="p-8 pt-0">
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine("""<p class="text-secondary italic">No violations found.</p>""");
+        }
+        else
+        {
+            writer.Write("""
+            <div class="rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container">
+            <table class="w-full text-left text-sm">
+            <thead>
+            <tr class="bg-surface-container-high/50 text-on-surface-variant font-label uppercase text-[10px] tracking-widest border-b border-outline-variant/20">
+            <th class="px-6 py-3">File</th>
+            <th class="px-6 py-3 text-right">Count</th>
+            <th class="px-6 py-3 text-right">Limit</th>
+            <th class="px-6 py-3">Severity</th>
+            <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/10">
+            """);
+
+            for (int i = 0; i < violations.Count; i++)
+            {
+                var file = violations[i];
+                var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+                var prompt = WebUtility.HtmlEncode(file.GetPrompt(relativePath));
+                var codeId = $"magic-string-{i}";
+                writer.WriteLine($"""<tr><td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td><td class="px-6 py-4 text-right font-bold text-tertiary">{file.Violations.Count}</td><td class="px-6 py-4 text-right text-on-surface-variant">{file.Limit}</td>{SeverityCell(file.Severity)}<td class="px-6 py-4 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show details</button><button data-prompt="{prompt}" onclick="showPromptModal(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors mr-1" style="cursor:pointer">Show prompt</button><button data-prompt="{prompt}" onclick="copyPrompt(this)" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Copy prompt</button></td></tr>""");
+
+                writer.Write($"""<tr id="{codeId}" class="hidden"><td colspan="5" class="px-6 py-3"><div class="space-y-1">""");
+                foreach (var v in file.Violations)
+                {
+                    writer.WriteLine($"""<div class="text-xs"><span class="text-on-surface-variant">Line {v.LineNumber}:</span> <span class="font-mono text-tertiary">"{WebUtility.HtmlEncode(v.Value)}"</span></div>""");
+                }
+                writer.Write("</div></td></tr>");
             }
 
             writer.Write("""

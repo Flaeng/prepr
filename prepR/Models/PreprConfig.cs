@@ -65,6 +65,18 @@ public class PreprConfig
     [JsonPropertyName("techDebtWeightCommentDensity")]
     public int? TechDebtWeightCommentDensity { get; set; }
 
+    [JsonPropertyName("maxMagicNumbers")]
+    public Dictionary<string, int>? MaxMagicNumbers { get; set; }
+
+    [JsonPropertyName("techDebtWeightMagicNumber")]
+    public int? TechDebtWeightMagicNumber { get; set; }
+
+    [JsonPropertyName("maxMagicStrings")]
+    public Dictionary<string, int>? MaxMagicStrings { get; set; }
+
+    [JsonPropertyName("techDebtWeightMagicString")]
+    public int? TechDebtWeightMagicString { get; set; }
+
     [JsonPropertyName("maxTechDebtScore")]
     public int? MaxTechDebtScore { get; set; }
 
@@ -83,13 +95,17 @@ public class PreprConfig
         MaxFileLines = new Dictionary<string, int> { { "*", 200 } },
         MaxIndentation = new Dictionary<string, int> { { "*", 4 } },
         EarlyReturn = true,
-        TechDebtWeightDuplication = 30,
-        TechDebtWeightLineLimit = 15,
-        TechDebtWeightIndentation = 15,
-        TechDebtWeightEarlyReturn = 15,
+        TechDebtWeightDuplication = 25,
+        TechDebtWeightLineLimit = 13,
+        TechDebtWeightIndentation = 13,
+        TechDebtWeightEarlyReturn = 13,
         MinCommentDensity = null,
-        MaxCommentDensity = null,
-        TechDebtWeightCommentDensity = 25,
+        MaxCommentDensity = new Dictionary<string, int> { { "*", 2 } },
+        TechDebtWeightCommentDensity = 20,
+        MaxMagicNumbers = new Dictionary<string, int> { { "*", 2 } },
+        TechDebtWeightMagicNumber = 8,
+        MaxMagicStrings = new Dictionary<string, int> { { "*", 2 } },
+        TechDebtWeightMagicString = 8,
         MaxTechDebtScore = null
     }, new JsonSerializerOptions { WriteIndented = true });
 }

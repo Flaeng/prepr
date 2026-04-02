@@ -10,7 +10,7 @@ public class HtmlReporterTests
                 new FileLocation("/src/FileA.cs", 10, 14),
                 new FileLocation("/src/FileB.cs", 20, 24)
             ]);
-        return new ScanResult([block], 5, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        return new ScanResult([block], 5, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class HtmlReporterTests
                 new FileLocation("/src/A.cs", 1, 5),
                 new FileLocation("/src/B.cs", 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 10, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([block], 2, 10, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
 
         var reporter = new HtmlReporter();
         using var writer = new StringWriter();
@@ -93,7 +93,7 @@ public class HtmlReporterTests
     {
         var reporter = new HtmlReporter();
         using var writer = new StringWriter();
-        reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>()), "/src", writer, new ReportOptions());
+        reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>()), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
         Assert.Contains("No duplicate blocks found.", output);
@@ -116,7 +116,7 @@ public class HtmlReporterTests
         var result = new ScanResult([block], 1, 50,
             new Dictionary<string, int>(),
             nestingDepths,
-            new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+            new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
 
         var options = new ReportOptions { IndentationRule = new IndentationRule(new Dictionary<string, int> { ["*"] = 3 }, null) };
         var reporter = new HtmlReporter();
@@ -151,7 +151,7 @@ public class HtmlReporterTests
         var result = new ScanResult([block], 1, 500,
             lineCounts,
             new Dictionary<string, NestingDepthInfo>(),
-            new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+            new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
 
         var options = new ReportOptions { LineLimitRule = new LineLimitRule(new Dictionary<string, int> { ["*"] = 200 }, null) };
         var reporter = new HtmlReporter();

@@ -50,6 +50,8 @@ public class HtmlReporter : IReporter
         HtmlRuleSectionWriter.WriteIndentationRule(result, rootPath, writer, options);
         HtmlRuleSectionWriter.WriteEarlyReturnRule(result, writer, rootPath, options);
         HtmlRuleSectionWriter.WriteCommentDensityRule(result, rootPath, writer, options);
+        HtmlRuleSectionWriter.WriteMagicNumberRule(result, rootPath, writer, options);
+        HtmlRuleSectionWriter.WriteMagicStringRule(result, rootPath, writer, options);
 
         writer.Write(FOOTER);
     }

@@ -5,7 +5,7 @@ public class FilePairGroupTests
     [Fact]
     public void ComputeFilePairs_NoDuplicates_ReturnsEmpty()
     {
-        var result = new ScanResult([], 5, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([], 5, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         Assert.Empty(pairs);
@@ -20,7 +20,7 @@ public class FilePairGroupTests
                 new FileLocation("/src/A.cs", 1, 5),
                 new FileLocation("/src/B.cs", 10, 14)
             ]);
-        var result = new ScanResult([block], 2, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([block], 2, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         Assert.Single(pairs);
@@ -40,7 +40,7 @@ public class FilePairGroupTests
                 new FileLocation("/src/B.cs", 1, 5),
                 new FileLocation("/src/C.cs", 1, 5)
             ]);
-        var result = new ScanResult([block], 3, 150, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([block], 3, 150, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         Assert.Equal(3, pairs.Count);
@@ -67,7 +67,7 @@ public class FilePairGroupTests
                 new FileLocation("/src/A.cs", 20, 24),
                 new FileLocation("/src/B.cs", 30, 34)
             ]);
-        var result = new ScanResult([block1, block2], 2, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([block1, block2], 2, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         Assert.Single(pairs);
@@ -96,7 +96,7 @@ public class FilePairGroupTests
                 new FileLocation("/src/C.cs", 1, 5),
                 new FileLocation("/src/D.cs", 1, 5)
             ]);
-        var result = new ScanResult([block1, block2, block3], 4, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([block1, block2, block3], 4, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         Assert.Equal(2, pairs.Count);
@@ -114,7 +114,7 @@ public class FilePairGroupTests
                 new FileLocation("/src/Z.cs", 1, 5),
                 new FileLocation("/src/A.cs", 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([block], 2, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         Assert.Single(pairs);

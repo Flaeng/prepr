@@ -9,10 +9,10 @@
 - [x] Comment density rule — Flag files with very low comment-to-code ratios.
   Implemented as its own independently toggleable rule. Counts single-line and block comments relative to total code lines and reports files below a configurable minimum ratio. Useful for catching under-documented areas of a codebase.
 
-- [ ] Magic number detection — Flag hardcoded numeric literals that should be named constants.
+- [x] Magic number detection — Flag hardcoded numeric literals that should be named constants.
   A separate rule from comment density, independently configurable. Scans for raw numeric literals outside of common safe contexts (0, 1, array indices, etc.) and reports them with file location. Helps enforce the "no magic numbers" coding guideline.
 
-- [ ] Magic string detection — Flag repeated hardcoded string literals that should be named constants.
+- [x] Magic string detection — Flag repeated hardcoded string literals that should be named constants.
   Companion rule to magic number detection, independently configurable. Detects string literals that appear more than a configurable number of times across a file or project, excluding common safe values (empty string, single characters, etc.). Reports each occurrence with file location to help enforce consistent use of named constants.
 
 - [ ] Watch mode — `--watch` to re-scan on file changes during development, showing live feedback in the terminal.

@@ -179,6 +179,36 @@ public class PromptReporter : IReporter
             ));
         }
 
+        // Magic number violations
+        var magicNumberViolations = MagicNumberFileInfo.Compute(result, options, rootPath);
+        foreach (var file in magicNumberViolations)
+        {
+            var rel = Path.GetRelativePath(rootPath, file.FilePath);
+            var violationLines = string.Join("\n", file.Violations.Select(v => $"- Line {v.LineNumber}: {v.Value}"));
+            issues.Add(new RoadmapIssue(
+                file.Severity,
+                $"Magic numbers — `{rel}`",
+                $"`{rel}` has {file.Violations.Count} magic number(s) (limit: {file.Limit}):\n\n{violationLines}",
+                null,
+                file.GetPrompt(rel)
+            ));
+        }
+
+        // Magic string violations
+        var magicStringViolations = MagicStringFileInfo.Compute(result, options, rootPath);
+        foreach (var file in magicStringViolations)
+        {
+            var rel = Path.GetRelativePath(rootPath, file.FilePath);
+            var violationLines = string.Join("\n", file.Violations.Select(v => $"- Line {v.LineNumber}: \"{v.Value}\""));
+            issues.Add(new RoadmapIssue(
+                file.Severity,
+                $"Magic strings — `{rel}`",
+                $"`{rel}` has {file.Violations.Count} repeated magic string(s) (limit: {file.Limit}):\n\n{violationLines}",
+                null,
+                file.GetPrompt(rel)
+            ));
+        }
+
         return issues;
     }
 }

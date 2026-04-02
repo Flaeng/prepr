@@ -7,4 +7,6 @@ public record ScanResult(
     IReadOnlyDictionary<string, int> FileLineCounts,
     IReadOnlyDictionary<string, NestingDepthInfo> FileMaxNestingDepths,
     IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> EarlyReturnViolations,
-    IReadOnlyDictionary<string, int> FileCommentLineCounts);
+    IReadOnlyDictionary<string, int> FileCommentLineCounts,
+    IReadOnlyDictionary<string, IReadOnlyList<MagicNumberViolation>> MagicNumberViolations,
+    IReadOnlyDictionary<string, IReadOnlyList<MagicStringViolation>> MagicStringViolations);

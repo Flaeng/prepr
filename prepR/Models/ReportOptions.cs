@@ -13,11 +13,15 @@ public record ReportOptions(
     bool EarlyReturn = false,
     MinCommentDensityRule? MinCommentDensityRule = null,
     MaxCommentDensityRule? MaxCommentDensityRule = null,
-    int TechDebtWeightDuplication = 30,
-    int TechDebtWeightLineLimit = 15,
-    int TechDebtWeightIndentation = 15,
-    int TechDebtWeightEarlyReturn = 15,
-    int TechDebtWeightCommentDensity = 25)
+    MagicNumberRule? MagicNumberRule = null,
+    MagicStringRule? MagicStringRule = null,
+    int TechDebtWeightDuplication = 25,
+    int TechDebtWeightLineLimit = 13,
+    int TechDebtWeightIndentation = 13,
+    int TechDebtWeightEarlyReturn = 13,
+    int TechDebtWeightCommentDensity = 20,
+    int TechDebtWeightMagicNumber = 8,
+    int TechDebtWeightMagicString = 8)
 {
     public static ReportOptions Create(
         PreprConfig config,
@@ -70,6 +74,14 @@ public record ReportOptions(
             ? parse.GetValue(MaxCommentDensityOption) : null;
         var maxCommentDensityRule = new MaxCommentDensityRule(config.MaxCommentDensity, maxCommentDensityCliValue);
 
+        var maxMagicNumbersCliValue = parse.GetResult(MaxMagicNumbersOption) is not null
+            ? parse.GetValue(MaxMagicNumbersOption) : null;
+        var magicNumberRule = new MagicNumberRule(config.MaxMagicNumbers, maxMagicNumbersCliValue);
+
+        var maxMagicStringsCliValue = parse.GetResult(MaxMagicStringsOption) is not null
+            ? parse.GetValue(MaxMagicStringsOption) : null;
+        var magicStringRule = new MagicStringRule(config.MaxMagicStrings, maxMagicStringsCliValue);
+
         return new ReportOptions(
             verbosity,
             config.HighSeverityThreshold ?? 50,
@@ -79,11 +91,15 @@ public record ReportOptions(
             earlyReturn,
             minCommentDensityRule.HasRules ? minCommentDensityRule : null,
             maxCommentDensityRule.HasRules ? maxCommentDensityRule : null,
-            config.TechDebtWeightDuplication ?? 30,
-            config.TechDebtWeightLineLimit ?? 15,
-            config.TechDebtWeightIndentation ?? 15,
-            config.TechDebtWeightEarlyReturn ?? 15,
-            config.TechDebtWeightCommentDensity ?? 25);
+            magicNumberRule.HasRules ? magicNumberRule : null,
+            magicStringRule.HasRules ? magicStringRule : null,
+            config.TechDebtWeightDuplication ?? 25,
+            config.TechDebtWeightLineLimit ?? 13,
+            config.TechDebtWeightIndentation ?? 13,
+            config.TechDebtWeightEarlyReturn ?? 13,
+            config.TechDebtWeightCommentDensity ?? 20,
+            config.TechDebtWeightMagicNumber ?? 8,
+            config.TechDebtWeightMagicString ?? 8);
     }
 
     private static Verbosity ParseVerbosity(string? value) => value?.ToLowerInvariant() switch

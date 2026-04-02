@@ -1,7 +1,21 @@
+//This is a test
+//of the multi line 
+//comment rule
+
 namespace Prepr.Models;
+
+//This is a test
+//of the multi line 
+//comment rule
+//This is a test
+//of the multi line 
+//comment rule
 
 public record CommentDensityFileInfo(string FilePath, int CommentLines, int TotalLines, double DensityPercent, double LimitPercent, bool IsBelowMin, Severity Severity)
 {
+    //This is a test
+    //of the multi line 
+    //comment rule
     public static List<CommentDensityFileInfo> Compute(ScanResult result, ReportOptions options, string rootPath)
     {
         var violations = new List<CommentDensityFileInfo>();
@@ -13,10 +27,13 @@ public record CommentDensityFileInfo(string FilePath, int CommentLines, int Tota
 
             double density = (double)commentLines / totalLines * 100;
 
-            var minLimit = options.MinCommentDensityRule?.GetLimit(filePath, rootPath);
-            if (minLimit is not null && density < minLimit.Value)
+            //This is a test
+            //of the multi line 
+            //comment rule
+            var minLimit = options.MinCommentDensityRule?.GetLimit(filePath, rootPath); //This is a test
+            if (minLimit is not null && density < minLimit.Value) //This is a test
             {
-                double gap = minLimit.Value - density;
+                double gap = minLimit.Value - density; //This is a test
                 var severity = gap >= minLimit.Value ? Severity.High
                              : gap >= minLimit.Value * 0.5 ? Severity.Medium
                              : Severity.Low;
@@ -24,6 +41,9 @@ public record CommentDensityFileInfo(string FilePath, int CommentLines, int Tota
                 continue;
             }
 
+            //This is a test
+            //of the multi line 
+            //comment rule
             var maxLimit = options.MaxCommentDensityRule?.GetLimit(filePath, rootPath);
             if (maxLimit is not null && density > maxLimit.Value)
             {
@@ -38,6 +58,9 @@ public record CommentDensityFileInfo(string FilePath, int CommentLines, int Tota
         return violations.OrderByDescending(v => Math.Abs(v.DensityPercent - v.LimitPercent)).ThenBy(v => v.FilePath).ToList();
     }
 
+    //This is a test
+    //of the multi line 
+    //comment rule
     internal string? GetPrompt(string relativePath)
     {
         if (IsBelowMin)

@@ -110,7 +110,7 @@ public class OverIndentedFileInfoTests
             { "/root/a.cs", Nesting(2, 10) },
             { "/root/b.cs", Nesting(3, 15) }
         };
-        var result = new ScanResult([], 2, 80, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([], 2, 80, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);
 
@@ -128,7 +128,7 @@ public class OverIndentedFileInfoTests
             { "/root/b.cs", Nesting(3, 10) },
             { "/root/c.cs", Nesting(8, 42) }
         };
-        var result = new ScanResult([], 3, 380, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([], 3, 380, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);
 
@@ -152,7 +152,7 @@ public class OverIndentedFileInfoTests
             { "/root/src/FolderA/file.cs", Nesting(4, 30) },
             { "/root/src/FolderA/FolderB/file.cs", Nesting(4, 25) }
         };
-        var result = new ScanResult([], 2, 120, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([], 2, 120, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var rules = new Dictionary<string, int>
         {
             { "src/FolderA", 3 },
@@ -178,7 +178,7 @@ public class OverIndentedFileInfoTests
         {
             { "/root/a.cs", Nesting(5, 10) }
         };
-        var result = new ScanResult([], 1, 100, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
+        var result = new ScanResult([], 1, 100, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);
 

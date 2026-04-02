@@ -27,6 +27,10 @@ public class MarkdownReporter : IReporter
 
         WriteCommentDensityRule(result, rootPath, writer, options);
 
+        WriteMagicNumberRule(result, rootPath, writer, options);
+
+        WriteMagicStringRule(result, rootPath, writer, options);
+
         WriteTechDebtScore(result, rootPath, writer, options);
     }
 
@@ -250,6 +254,80 @@ public class MarkdownReporter : IReporter
             var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
             var direction = v.IsBelowMin ? "Below min" : "Above max";
             writer.WriteLine($"| `{relativePath}` | {v.CommentLines} | {v.TotalLines} | {v.DensityPercent:F1}% | {v.LimitPercent:F1}% | {direction} | {v.Severity} |");
+        }
+    }
+
+    private static void WriteMagicNumberRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = MagicNumberFileInfo.Compute(result, options, rootPath);
+        var highCount = violations.Count(v => v.Severity == Severity.High);
+        var mediumCount = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCount = violations.Count(v => v.Severity == Severity.Low);
+
+        writer.Write($"""
+
+            ---
+
+            ## Magic Numbers {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
+
+            | File | Line | Value | Severity |
+            |------|------|-------|----------|
+            """);
+
+        foreach (var file in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            foreach (var v in file.Violations)
+            {
+                writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | {v.Value} | {file.Severity} |");
+            }
+        }
+    }
+
+    private static void WriteMagicStringRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = MagicStringFileInfo.Compute(result, options, rootPath);
+        var highCount = violations.Count(v => v.Severity == Severity.High);
+        var mediumCount = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCount = violations.Count(v => v.Severity == Severity.Low);
+
+        writer.Write($"""
+
+            ---
+
+            ## Magic Strings {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
+
+            | File | Line | Value | Severity |
+            |------|------|-------|----------|
+            """);
+
+        foreach (var file in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            foreach (var v in file.Violations)
+            {
+                writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | `\"{v.Value}\"` | {file.Severity} |");
+            }
         }
     }
 
