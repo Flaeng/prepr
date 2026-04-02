@@ -37,11 +37,11 @@
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.tests/prepR\\.Tests\\.csproj( --no-restore)? 2>&1 \\| Select-Object -Last [0-9]+$/": {
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj( --no-restore)? 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.tests/prepR\\.Tests\\.csproj --filter \"[A-Za-z]+\"( --no-restore)? 2>&1 \\| Select-Object -Last [0-9]+$/": {
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj --filter \"[A-Za-z]+\"( --no-restore)? 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       },

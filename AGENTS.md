@@ -2,16 +2,23 @@
 
 ## Overview
 
-prepr is a .NET 10.0 CLI tool that detects and reports duplicated code blocks across files in a directory tree. It uses `System.CommandLine` for CLI parsing and supports multiple output formats (console, HTML, Markdown, CSV, prompt).
+prepr is a .NET 10.0 CLI tool that detects and reports code quality issues across files in a directory tree — including duplicated code blocks, line-limit violations, excessive nesting depth, and early return opportunities. It uses `System.CommandLine` for CLI parsing and supports multiple output formats (console, HTML, Markdown, CSV, prompt).
 
 ## Architecture
 
-- **Program.cs** — Entry point, CLI option definitions, config merging (CLI > config file > defaults), orchestration
-- **Models.cs** — Immutable domain records (`DuplicateBlock`, `ScanResult`, `FileDuplicationInfo`, `SummaryStatistics`, etc.)
+- **Program.cs** — Entry point, config merging (CLI > config file > defaults), orchestration
+- **CliSymbols.cs** — CLI argument and option definitions
+- **ConfigLoader.cs** — Loads and deserializes `.preprrc` JSON config files
+- **ConfigInitializer.cs** — Creates a new `.preprrc` config file in a directory
+- **Models/** — Immutable domain records (`DuplicateBlock`, `ScanResult`, `DuplicationFileInfo`, `SummaryStatistics`, `TechDebtScore`, etc.)
 - **FileDiscovery.cs** — Directory traversal with include/exclude glob filtering
 - **DuplicateDetector.cs** — Core duplicate-line detection algorithm
-- **RuleChecker.cs** — Orchestrator for duplication and line-limit rules; integrates caching
+- **BlockConsolidator.cs** — Merges duplicate blocks that appear in the same set of files
+- **EarlyReturnAnalyzer.cs** — Detects early return anti-pattern violations
+- **RuleChecker.cs** — Orchestrator for duplication, line-limit, nesting-depth, and early-return rules; integrates caching
 - **ScanCache.cs** — Incremental scanning cache to skip unchanged files
+- **ReportWriter.cs** — Routes scan results to multiple output format reporters
+- **ProgressBar.cs** — Terminal progress bar display utility
 - **Reporters/** — Output format implementations behind `IReporter` interface
 
 ## Code Style
@@ -29,8 +36,8 @@ prepr is a .NET 10.0 CLI tool that detects and reports duplicated code blocks ac
 ## Build and Test
 
 ```bash
-dotnet build prepr/prepr.csproj
-dotnet test prepr.Tests/prepr.Tests.csproj
+dotnet build prepr/prepR.csproj
+dotnet test prepr.tests/prepR.Tests.csproj
 dotnet run --project prepr -- <path> [options]
 ```
 
@@ -38,7 +45,7 @@ dotnet run --project prepr -- <path> [options]
 
 - **Config hierarchy:** CLI args override `.preprrc` config file, which overrides built-in defaults
 - **Exit codes:** 0 = success, 1 = config/directory error, 2 = thresholds exceeded
-- **Severity levels:** Low/Medium/High based on configurable duplication percentage thresholds
+- **Severity levels:** Low/Medium/High based on configurable thresholds for each rule
 - **Package versions** are centrally managed in `Directory.Packages.props`
 - **Shared build properties** live in `Directory.Build.props`
-- Tests use xUnit; each core component and reporter has a corresponding test file in `prepr.Tests/`
+- Tests use xUnit; each core component and reporter has a corresponding test file in `prepr.tests/`
