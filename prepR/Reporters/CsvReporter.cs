@@ -36,11 +36,11 @@ public class CsvReporter : IReporter
         if (overLimit.Count > 0)
         {
             writer.WriteLine();
-            writer.WriteLine("File,LineCount,Limit");
+            writer.WriteLine("File,LineCount,Limit,Severity");
             foreach (var v in overLimit)
             {
                 var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"{CsvEscape(relativePath)},{v.LineCount},{v.Limit}");
+                writer.WriteLine($"{CsvEscape(relativePath)},{v.LineCount},{v.Limit},{v.Severity}");
             }
         }
 
@@ -49,11 +49,11 @@ public class CsvReporter : IReporter
         if (overIndented.Count > 0)
         {
             writer.WriteLine();
-            writer.WriteLine("File,MaxDepth,Lines,Limit");
+            writer.WriteLine("File,MaxDepth,Lines,Limit,Severity");
             foreach (var v in overIndented)
             {
                 var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"{CsvEscape(relativePath)},{v.MaxDepth},{CsvEscape(v.RangesDisplay)},{v.Limit}");
+                writer.WriteLine($"{CsvEscape(relativePath)},{v.MaxDepth},{CsvEscape(v.RangesDisplay)},{v.Limit},{v.Severity}");
             }
         }
 
@@ -62,13 +62,13 @@ public class CsvReporter : IReporter
         if (earlyReturnViolations.Count > 0)
         {
             writer.WriteLine();
-            writer.WriteLine("File,Line,Description");
+            writer.WriteLine("File,Line,Description,Severity");
             foreach (var file in earlyReturnViolations)
             {
                 var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
                 foreach (var v in file.Violations)
                 {
-                    writer.WriteLine($"{CsvEscape(relativePath)},{v.LineNumber},{CsvEscape(v.Description)}");
+                    writer.WriteLine($"{CsvEscape(relativePath)},{v.LineNumber},{CsvEscape(v.Description)},{file.Severity}");
                 }
             }
         }

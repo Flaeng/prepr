@@ -88,7 +88,7 @@ public class PromptReporter : IReporter
             foreach (var v in overLimit)
             {
                 var rel = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"- `{rel}` \u2014 {v.LineCount} lines (limit: {v.Limit})");
+                writer.WriteLine($"- [{v.Severity}] `{rel}` \u2014 {v.LineCount} lines (limit: {v.Limit})");
             }
 
             writer.WriteLine();
@@ -110,7 +110,7 @@ public class PromptReporter : IReporter
             foreach (var v in overIndented)
             {
                 var rel = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"- `{rel}` \u2014 depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})");
+                writer.WriteLine($"- [{v.Severity}] `{rel}` \u2014 depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})");
             }
 
             writer.WriteLine();
@@ -132,7 +132,7 @@ public class PromptReporter : IReporter
             foreach (var file in earlyReturnViolations)
             {
                 var rel = Path.GetRelativePath(rootPath, file.FilePath);
-                writer.WriteLine($"### `{rel}`");
+                writer.WriteLine($"### [{file.Severity}] `{rel}`");
                 writer.WriteLine();
                 foreach (var v in file.Violations)
                 {

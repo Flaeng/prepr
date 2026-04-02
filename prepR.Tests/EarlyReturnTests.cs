@@ -146,6 +146,103 @@ public class EarlyReturnAnalyzerTests
 
         Assert.Single(violations);
     }
+
+    [Fact]
+    public void Analyze_IfWrapsRemainingMethodBody_ReportsViolation()
+    {
+        // Pattern: if block is the last thing in a method and wraps all remaining logic.
+        // Could be inverted to: if (items.Count <= 0) return; + unwrapped body.
+        var lines = MakeLines(
+            "private static void Method()",
+            "{",
+            "    var items = GetItems();",
+            "    if (items.Count > 0)",
+            "    {",
+            "        Console.WriteLine(\"a\");",
+            "        Console.WriteLine(\"b\");",
+            "        Console.WriteLine(\"c\");",
+            "    }",
+            "}");
+
+        var violations = EarlyReturnAnalyzer.Analyze(lines);
+
+        Assert.Single(violations);
+        Assert.Equal(4, violations[0].LineNumber);
+        Assert.Contains("guard clause", violations[0].Description);
+    }
+
+    [Fact]
+    public void Analyze_IfWrapsBody_WithElse_NoGuardViolation()
+    {
+        // If there's an else, this pattern doesn't apply
+        var lines = MakeLines(
+            "private static void Method()",
+            "{",
+            "    var items = GetItems();",
+            "    if (items.Count > 0)",
+            "    {",
+            "        Console.WriteLine(\"a\");",
+            "    }",
+            "    else",
+            "    {",
+            "        Console.WriteLine(\"b\");",
+            "    }",
+            "}");
+
+        var violations = EarlyReturnAnalyzer.Analyze(lines);
+
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Analyze_IfDoesNotWrapRemainingBody_NoViolation()
+    {
+        // Code continues after the if block — not a wrapping pattern
+        var lines = MakeLines(
+            "private static void Method()",
+            "{",
+            "    if (items.Count > 0)",
+            "    {",
+            "        Console.WriteLine(\"a\");",
+            "    }",
+            "    DoMore();",
+            "}");
+
+        var violations = EarlyReturnAnalyzer.Analyze(lines);
+
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Analyze_IfWrapsMethodBody_FollowedByAnotherMethod_ReportsViolation()
+    {
+        // The if wraps the rest of Method1's body, but Method2 follows in the same file.
+        // This is the real-world pattern from ConsoleReporter.WriteIndentationRule.
+        var lines = MakeLines(
+            "private static void Method1(ScanResult result, string rootPath)",
+            "{",
+            "    var items = Compute(result);",
+            "    if (items.Count > 0)",
+            "    {",
+            "        Console.WriteLine(\"header\");",
+            "        foreach (var v in items)",
+            "        {",
+            "            Console.WriteLine(v);",
+            "        }",
+            "        Console.WriteLine();",
+            "    }",
+            "}",
+            "",
+            "private static void Method2()",
+            "{",
+            "    DoSomething();",
+            "}");
+
+        var violations = EarlyReturnAnalyzer.Analyze(lines);
+
+        Assert.Single(violations);
+        Assert.Equal(4, violations[0].LineNumber);
+    }
 }
 
 public class EarlyReturnFileInfoTests

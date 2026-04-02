@@ -1,6 +1,6 @@
 namespace Prepr.Models;
 
-public record OverLimitFileInfo(string FilePath, int LineCount, int Limit)
+public record OverLimitFileInfo(string FilePath, int LineCount, int Limit, Severity Severity)
 {
     public static List<OverLimitFileInfo> Compute(ScanResult result, ReportOptions options, string rootPath)
     {
@@ -13,7 +13,13 @@ public record OverLimitFileInfo(string FilePath, int LineCount, int Limit)
         {
             var limit = options.LineLimitRule.GetLimit(filePath, rootPath);
             if (limit is not null && lineCount > limit.Value)
-                violations.Add(new OverLimitFileInfo(filePath, lineCount, limit.Value));
+            {
+                double ratio = (double)lineCount / limit.Value;
+                var severity = ratio >= 2.0 ? Severity.High
+                             : ratio >= 1.5 ? Severity.Medium
+                             : Severity.Low;
+                violations.Add(new OverLimitFileInfo(filePath, lineCount, limit.Value, severity));
+            }
         }
 
         return violations.OrderByDescending(v => v.LineCount).ThenBy(v => v.FilePath).ToList();

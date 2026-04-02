@@ -113,14 +113,14 @@ public class MarkdownReporter : IReporter
 
             ## Files Exceeding Line Limit
 
-            | File | Lines | Limit |
-            |------|-------|-------|
+            | File | Lines | Limit | Severity |
+            |------|-------|-------|----------|
             """);
 
         foreach (var v in overLimit)
         {
             var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-            writer.WriteLine($"| `{relativePath}` | {v.LineCount} | {v.Limit} |");
+            writer.WriteLine($"| `{relativePath}` | {v.LineCount} | {v.Limit} | {v.Severity} |");
         }
     }
 
@@ -138,14 +138,14 @@ public class MarkdownReporter : IReporter
 
             ## Files Exceeding Indentation Limit
 
-            | File | Max Depth | Lines | Limit |
-            |------|-----------|-------|-------|
+            | File | Max Depth | Lines | Limit | Severity |
+            |------|-----------|-------|-------|----------|
             """);
 
         foreach (var v in overIndented)
         {
             var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-            writer.WriteLine($"| `{relativePath}` | {v.MaxDepth} | {v.RangesDisplay} | {v.Limit} |");
+            writer.WriteLine($"| `{relativePath}` | {v.MaxDepth} | {v.RangesDisplay} | {v.Limit} | {v.Severity} |");
         }
     }
 
@@ -163,8 +163,8 @@ public class MarkdownReporter : IReporter
 
             ## Early Return Opportunities
 
-            | File | Line | Description |
-            |------|------|-------------|
+            | File | Line | Description | Severity |
+            |------|------|-------------|----------|
             """);
 
         foreach (var file in violations)
@@ -172,7 +172,7 @@ public class MarkdownReporter : IReporter
             var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
             foreach (var v in file.Violations)
             {
-                writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | {v.Description} |");
+                writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | {v.Description} | {file.Severity} |");
             }
         }
     }

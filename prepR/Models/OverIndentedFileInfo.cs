@@ -1,6 +1,6 @@
 namespace Prepr.Models;
 
-public record OverIndentedFileInfo(string FilePath, int MaxDepth, IReadOnlyList<(int StartLine, int EndLine)> OverLimitRanges, int Limit)
+public record OverIndentedFileInfo(string FilePath, int MaxDepth, IReadOnlyList<(int StartLine, int EndLine)> OverLimitRanges, int Limit, Severity Severity)
 {
     public static List<OverIndentedFileInfo> Compute(ScanResult result, ReportOptions options, string rootPath)
     {
@@ -15,7 +15,11 @@ public record OverIndentedFileInfo(string FilePath, int MaxDepth, IReadOnlyList<
             if (limit is not null && maxDepth > limit.Value)
             {
                 var ranges = ComputeOverLimitRanges(lineDepths, limit.Value);
-                violations.Add(new OverIndentedFileInfo(filePath, maxDepth, ranges, limit.Value));
+                int overage = maxDepth - limit.Value;
+                var severity = overage >= 3 ? Severity.High
+                             : overage >= 2 ? Severity.Medium
+                             : Severity.Low;
+                violations.Add(new OverIndentedFileInfo(filePath, maxDepth, ranges, limit.Value, severity));
             }
         }
 

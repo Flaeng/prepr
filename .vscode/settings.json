@@ -65,15 +65,15 @@
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~LineLimitRule\\|FullyQualifiedName~IndentationRule\" 2>&1 \\| Select-Object -Last 10$/": {
+      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~[A-Za-z]+\\|FullyQualifiedName~[A-Za-z]+\" 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~ConfigLoader\" 2>&1 \\| Select-Object -Last 10$/": {
+      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~[A-Za-z]+\" 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.tests/prepr\\.tests\\.csproj --filter \"FullyQualifiedName~Html\" 2>&1 \\| Select-Object -Last 10$/": {
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       }

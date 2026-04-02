@@ -100,8 +100,14 @@ public class ConsoleReporter : IReporter
         foreach (var v in overLimit)
         {
             var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+            var severityColor = v.Severity switch
+            {
+                Severity.High => ConsoleColor.Red,
+                Severity.Medium => ConsoleColor.Yellow,
+                _ => ConsoleColor.Green
+            };
             Write("  ", ConsoleColor.DarkGray);
-            Write("[!] ", ConsoleColor.Red);
+            Write($"[{v.Severity}] ", severityColor);
             Write($"{relativePath}", ConsoleColor.Cyan);
             WriteLine($"  {v.LineCount} lines (limit: {v.Limit})", ConsoleColor.Gray);
         }
@@ -111,21 +117,27 @@ public class ConsoleReporter : IReporter
     private static void WriteIndentationRule(ScanResult result, string rootPath, ReportOptions options)
     {
         var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
-        if (overIndented.Count <= 0)
-            return;
-
-        Console.WriteLine(new string('\u2500', 60));
-        WriteLine($"Files exceeding indentation limit ({overIndented.Count} file(s))", ConsoleColor.White);
-        Console.WriteLine();
-        foreach (var v in overIndented)
+        if (overIndented.Count > 0)
         {
-            var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-            Write("  ", ConsoleColor.DarkGray);
-            Write("[!] ", ConsoleColor.Red);
-            Write($"{relativePath}", ConsoleColor.Cyan);
-            WriteLine($"  depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})", ConsoleColor.Gray);
+            Console.WriteLine(new string('\u2500', 60));
+            WriteLine($"Files exceeding indentation limit ({overIndented.Count} file(s))", ConsoleColor.White);
+            Console.WriteLine();
+            foreach (var v in overIndented)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+                var severityColor = v.Severity switch
+                {
+                    Severity.High => ConsoleColor.Red,
+                    Severity.Medium => ConsoleColor.Yellow,
+                    _ => ConsoleColor.Green
+                };
+                Write("  ", ConsoleColor.DarkGray);
+                Write($"[{v.Severity}] ", severityColor);
+                Write($"{relativePath}", ConsoleColor.Cyan);
+                WriteLine($"  depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})", ConsoleColor.Gray);
+            }
+            Console.WriteLine();
         }
-        Console.WriteLine();
     }
 
     private static void WriteEarlyReturnRule(ScanResult result, string rootPath)
@@ -141,8 +153,14 @@ public class ConsoleReporter : IReporter
         foreach (var file in violations)
         {
             var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            var severityColor = file.Severity switch
+            {
+                Severity.High => ConsoleColor.Red,
+                Severity.Medium => ConsoleColor.Yellow,
+                _ => ConsoleColor.Green
+            };
             Write("  ", ConsoleColor.DarkGray);
-            Write("[!] ", ConsoleColor.Red);
+            Write($"[{file.Severity}] ", severityColor);
             Write($"{relativePath}", ConsoleColor.Cyan);
             WriteLine($"  {file.Violations.Count} violation(s)", ConsoleColor.Gray);
             foreach (var v in file.Violations)
@@ -242,7 +260,7 @@ public class ConsoleReporter : IReporter
             Console.WriteLine("No duplicates found.");
             return;
         }
-        
+
         Console.WriteLine($"{stats.TotalDuplicateBlocks} duplicate block(s), {stats.TotalDuplicatedLines} duplicated line(s)");
     }
 

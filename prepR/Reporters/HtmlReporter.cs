@@ -44,13 +44,6 @@ public class HtmlReporter : IReporter
             </div>
             """);
 
-        if (result.Duplicates.Count == 0)
-        {
-            writer.WriteLine("""<p class="text-secondary italic mt-8">No duplicate blocks found.</p>""");
-            writer.Write(FOOTER);
-            return;
-        }
-
         WriteDuplicationSection(result, rootPath, writer, options, stats);
 
         HtmlRuleSectionWriter.WriteLineLimitRule(result, rootPath, writer, options);
@@ -81,13 +74,20 @@ public class HtmlReporter : IReporter
             <div class="p-8 pt-0 space-y-12">
             """);
 
-        HtmlDuplicationWriter.WritePerFileSummary(result, rootPath, writer, fileInfos);
+        if (result.Duplicates.Count == 0)
+        {
+            writer.WriteLine("""<p class="text-secondary italic">No duplicate blocks found.</p>""");
+        }
+        else
+        {
+            HtmlDuplicationWriter.WritePerFileSummary(result, rootPath, writer, fileInfos);
 
-        var pairs = FilePairGroup.ComputeFilePairs(result);
-        if (pairs.Count > 0)
-            HtmlDuplicationWriter.WriteFilePairs(rootPath, writer, pairs);
+            var pairs = FilePairGroup.ComputeFilePairs(result);
+            if (pairs.Count > 0)
+                HtmlDuplicationWriter.WriteFilePairs(rootPath, writer, pairs);
 
-        writer.WriteLine($"""<p class="text-sm font-bold text-primary">Total: {stats.TotalDuplicateBlocks} duplicate block(s) across {result.TotalFilesScanned} files</p>""");
+            writer.WriteLine($"""<p class="text-sm font-bold text-primary">Total: {stats.TotalDuplicateBlocks} duplicate block(s) across {result.TotalFilesScanned} files</p>""");
+        }
 
         writer.Write("""
             </div>
