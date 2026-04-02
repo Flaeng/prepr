@@ -14,14 +14,14 @@ public class PromptReporterTests
     }
 
     [Fact]
-    public void Report_ContainsRefactoringHeader()
+    public void Report_ContainsRoadmapHeader()
     {
         var reporter = new PromptReporter();
         using var writer = new StringWriter();
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("# Duplicate Code Refactoring Instructions", output);
+        Assert.Contains("# Code Quality Roadmap", output);
     }
 
     [Fact]
@@ -73,13 +73,35 @@ public class PromptReporterTests
     }
 
     [Fact]
-    public void Report_NoDuplicates_ShowsNoActionNeeded()
+    public void Report_NoIssues_ShowsNoActionNeeded()
     {
         var reporter = new PromptReporter();
         using var writer = new StringWriter();
         reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>()), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("No duplicates found", output);
+        Assert.Contains("No issues found", output);
+    }
+
+    [Fact]
+    public void Report_GroupsIssuesIntoPhases()
+    {
+        var reporter = new PromptReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Matches("## Phase \\d:", output);
+    }
+
+    [Fact]
+    public void Report_AssignsTaskIds()
+    {
+        var reporter = new PromptReporter();
+        using var writer = new StringWriter();
+        reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
+        var output = writer.ToString();
+
+        Assert.Contains("TASK-001:", output);
     }
 }

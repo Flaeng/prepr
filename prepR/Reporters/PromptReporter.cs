@@ -8,18 +8,19 @@ public class PromptReporter : IReporter
         var stats = SummaryStatistics.Compute(result);
 
         writer.WriteLine($"""
-            # Duplicate Code Refactoring Instructions
-        
-            The following duplicate code blocks were detected across multiple files.
-            Please refactor each duplicate block to eliminate the duplication.
-            Extract shared logic into a common method, base class, or shared utility as appropriate.
-        
+            # Code Quality Roadmap
+
+            The following issues were detected in the codebase. They are organized by severity so you can prioritize the most impactful fixes first.
+
             **Scan summary:** {result.TotalFilesScanned} files scanned, {result.TotalLinesScanned} total lines, {stats.TotalDuplicateBlocks} duplicate block(s) found, {stats.TotalDuplicatedLines} duplicated line(s).
             """);
 
-        if (result.Duplicates.Count == 0)
+        // Collect all issues with their severity
+        var issues = CollectIssues(result, rootPath, options);
+
+        if (issues.Count == 0)
         {
-            writer.WriteLine("No duplicates found — no action needed.");
+            writer.WriteLine("No issues found — no action needed.");
             var techDebtScoreEmpty = TechDebtScore.Compute(result, options, rootPath);
             writer.WriteLine($"""
 
@@ -32,114 +33,46 @@ public class PromptReporter : IReporter
             return;
         }
 
-        // High-severity files first
-        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
-        var highSeverity = fileInfos.Where(f => f.Severity == Severity.High).ToList();
-        if (highSeverity.Count > 0)
+        int taskId = 1;
+        var phases = new (Severity Severity, string PhaseName, string PhaseDescription)[]
         {
-            writer.WriteLine("""
-                ## Priority Files (High Duplication)
-            
-                These files have the highest duplication and should be refactored first:
-                """);
-            foreach (var info in highSeverity)
-            {
-                var rel = Path.GetRelativePath(rootPath, info.FilePath);
-                writer.WriteLine($"- `{rel}` — {info.DuplicationPercentage:F1}% duplicated ({info.DuplicatedLineCount}/{info.TotalLineCount} lines, {info.DuplicateBlockCount} block(s))");
-            }
-            writer.WriteLine();
-        }
+            (Severity.High, "Phase 1: Critical Issues", "These are high-severity issues that should be addressed first. They have the largest impact on code quality."),
+            (Severity.Medium, "Phase 2: Important Issues", "These are medium-severity issues. Address these after resolving all critical issues."),
+            (Severity.Low, "Phase 3: Minor Issues", "These are low-severity issues. Address these last as part of ongoing code hygiene.")
+        };
 
-        WriteDuplications(result, rootPath, writer);
-
-        // File pair instructions
-        var pairs = FilePairGroup.ComputeFilePairs(result);
-        if (pairs.Count > 0)
+        foreach (var (severity, phaseName, phaseDescription) in phases)
         {
-            writer.WriteLine("""
+            var group = issues.Where(i => i.Severity == severity).ToList();
+            if (group.Count == 0) continue;
+
+            writer.WriteLine($"""
                 ---
-            
-                ## File Pair Analysis
+
+                ## {phaseName} ({group.Count} issue(s))
+
+                {phaseDescription}
                 """);
-            foreach (var pair in pairs)
+
+            foreach (var issue in group)
             {
-                var relA = Path.GetRelativePath(rootPath, pair.FileA);
-                var relB = Path.GetRelativePath(rootPath, pair.FileB);
-                writer.WriteLine($"### `{relA}` ↔ `{relB}`");
                 writer.WriteLine();
-                writer.WriteLine($"These files share {pair.SharedBlocks.Count} duplicate block(s) ({pair.SharedLineCount} lines). Consider extracting shared logic into a common location.");
+                writer.WriteLine($"### TASK-{taskId:D3}: {issue.Title}");
                 writer.WriteLine();
-            }
-        }
-
-        // Files exceeding line limit
-        var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
-        if (overLimit.Count > 0)
-        {
-            writer.WriteLine("""
-                ---
-            
-                ## Files Exceeding Line Limit
-            
-                The following files exceed their maximum allowed line count. Consider splitting them into smaller, more focused files:
-            
-                """);
-
-            foreach (var v in overLimit)
-            {
-                var rel = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"- [{v.Severity}] `{rel}` \u2014 {v.LineCount} lines (limit: {v.Limit})");
-            }
-
-            writer.WriteLine();
-        }
-
-        // Files exceeding indentation limit
-        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
-        if (overIndented.Count > 0)
-        {
-            writer.WriteLine("""
-                ---
-            
-                ## Files Exceeding Indentation Limit
-            
-                The following files exceed their maximum allowed nesting depth. Consider refactoring to reduce complexity:
-            
-                """);
-
-            foreach (var v in overIndented)
-            {
-                var rel = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"- [{v.Severity}] `{rel}` \u2014 depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})");
-            }
-
-            writer.WriteLine();
-        }
-
-        // Early return violations
-        var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
-        if (earlyReturnViolations.Count > 0)
-        {
-            writer.WriteLine("""
-                ---
-            
-                ## Early Return Opportunities
-            
-                The following files contain else blocks that could be replaced with guard clauses (early returns). Invert the condition and return early to reduce nesting:
-            
-                """);
-
-            foreach (var file in earlyReturnViolations)
-            {
-                var rel = Path.GetRelativePath(rootPath, file.FilePath);
-                writer.WriteLine($"### [{file.Severity}] `{rel}`");
-                writer.WriteLine();
-                foreach (var v in file.Violations)
+                writer.WriteLine(issue.Description);
+                if (issue.CodeBlock is not null)
                 {
-                    writer.WriteLine($"- Line {v.LineNumber}: {v.Description}");
+                    writer.WriteLine();
+                    writer.WriteLine("```");
+                    writer.WriteLine(issue.CodeBlock);
+                    writer.WriteLine("```");
                 }
                 writer.WriteLine();
+                writer.WriteLine($"**Action:** {issue.Action}");
+                taskId++;
             }
+
+            writer.WriteLine();
         }
 
         // Tech Debt Score
@@ -155,40 +88,82 @@ public class PromptReporter : IReporter
             """);
     }
 
-    private static void WriteDuplications(ScanResult result, string rootPath, TextWriter writer)
+    private record RoadmapIssue(Severity Severity, string Title, string Description, string? CodeBlock, string Action);
+
+    private static List<RoadmapIssue> CollectIssues(ScanResult result, string rootPath, ReportOptions options)
     {
+        var issues = new List<RoadmapIssue>();
+
+        // Duplicate blocks — severity comes from per-file duplication info
+        var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
+        var fileSeverity = fileInfos.ToDictionary(f => f.FilePath, f => f.Severity);
+
         for (int i = 0; i < result.Duplicates.Count; i++)
         {
             var block = result.Duplicates[i];
-            writer.WriteLine($"""
-                ---
-            
-                ## Duplicate #{i + 1}
-            
-                This block of {block.Lines.Length} lines appears in {block.Locations.Count} locations:
-                """);
+            // Use the highest severity among the files involved
+            var blockSeverity = block.Locations
+                .Select(loc => fileSeverity.GetValueOrDefault(loc.FilePath, Severity.Low))
+                .Max();
 
-            foreach (var loc in block.Locations)
+            var locations = string.Join("\n", block.Locations.Select(loc =>
             {
-                var relativePath = Path.GetRelativePath(rootPath, loc.FilePath);
-                writer.WriteLine($"- `{relativePath}` lines {loc.StartLine}–{loc.EndLine}");
-            }
+                var rel = Path.GetRelativePath(rootPath, loc.FilePath);
+                return $"- `{rel}` lines {loc.StartLine}–{loc.EndLine}";
+            }));
 
-            writer.WriteLine("""
-                
-                **Duplicated code:**
-            
-                ```
-                """);
-
-            foreach (var line in block.Lines)
-                writer.WriteLine(line);
-
-            writer.WriteLine("""
-                ```
-            
-                **Action:** Refactor to remove this duplication. Keep the code DRY by extracting into a shared location that all consuming files can reference.
-                """);
+            issues.Add(new RoadmapIssue(
+                blockSeverity,
+                $"Duplicate #{i + 1} — {block.Lines.Length} lines in {block.Locations.Count} locations",
+                $"This block of {block.Lines.Length} lines appears in {block.Locations.Count} locations:\n\n{locations}",
+                string.Join("\n", block.Lines),
+                "Refactor to remove this duplication. Keep the code DRY by extracting into a shared location that all consuming files can reference."
+            ));
         }
+
+        // Files exceeding line limit
+        var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
+        foreach (var v in overLimit)
+        {
+            var rel = Path.GetRelativePath(rootPath, v.FilePath);
+            issues.Add(new RoadmapIssue(
+                v.Severity,
+                $"Line limit exceeded — `{rel}`",
+                $"`{rel}` has {v.LineCount} lines (limit: {v.Limit}).",
+                null,
+                "Split this file into smaller, more focused files."
+            ));
+        }
+
+        // Files exceeding indentation limit
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        foreach (var v in overIndented)
+        {
+            var rel = Path.GetRelativePath(rootPath, v.FilePath);
+            issues.Add(new RoadmapIssue(
+                v.Severity,
+                $"Excessive nesting — `{rel}`",
+                $"`{rel}` has nesting depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit}).",
+                null,
+                "Refactor to reduce nesting depth. Extract methods, use early returns, or simplify conditionals."
+            ));
+        }
+
+        // Early return violations
+        var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
+        foreach (var file in earlyReturnViolations)
+        {
+            var rel = Path.GetRelativePath(rootPath, file.FilePath);
+            var violationLines = string.Join("\n", file.Violations.Select(v => $"- Line {v.LineNumber}: {v.Description}"));
+            issues.Add(new RoadmapIssue(
+                file.Severity,
+                $"Early return opportunities — `{rel}`",
+                $"`{rel}` has {file.Violations.Count} else block(s) that could be replaced with guard clauses:\n\n{violationLines}",
+                null,
+                "Invert the condition and return early to reduce nesting."
+            ));
+        }
+
+        return issues;
     }
 }
