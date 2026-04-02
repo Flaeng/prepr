@@ -1,0 +1,41 @@
+{
+    "chat.tools.terminal.autoApprove": {
+      "/^dotnet (--version|restore|build|list package)$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "dotnet test prepR\\.Tests/prepR\\.Tests\\.csproj": true,
+      "/^(cd C:\\\\repos\\\\prepR; )?dotnet build prepR(\\.Tests)?/prepR(\\.Tests)?\\.csproj( 2>&1)?$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet build prepR(\\.Tests)?/prepR(\\.Tests)?\\.csproj 2>&1 \\| Select-String -Pattern \"[a-zA-Z\\\\|.*^]+\"( -CaseSensitive)?( \\| Select-Object -First [0-9]+)?$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepR\\.Tests/prepR\\.Tests\\.csproj (--verbosity normal|--no-build 2>&1 \\| Select-Object -Last [0-9]+)$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet run --project prepR/prepR\\.csproj -- prepR 2>&1 \\| Select-Object -Last 40$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepR\\.Tests/prepR\\.Tests\\.csproj --filter \"WriteToFileTests\"$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepR\\.Tests/prepR\\.Tests\\.csproj --no-restore 2>&1 \\| Select-String -Pattern \"Passed\\|Failed\\|Total\\|Error\" \\| Select-Object -First 10$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepR\\.Tests/prepR\\.Tests\\.csproj --no-restore$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet clean prepR/prepR\\.csproj -q; dotnet build prepR/prepR\\.csproj$/": {
+        "approve": true,
+        "matchCommandLine": true
+      }
+    }
+}

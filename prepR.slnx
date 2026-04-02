@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="prepR/prepR.csproj" />
+  <Project Path="prepR.Tests/prepR.Tests.csproj" />
+</Solution>

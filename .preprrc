@@ -1,0 +1,27 @@
+{
+  "output": [
+    "html",
+    "md",
+    "csv",
+    "prompt"
+  ],
+  "outputFile": "report.prepr",
+  "threshold": 5,
+  "includeExtensions": [],
+  "excludeExtensions": [".json"],
+  "ignorePaths": [
+    "node_modules",
+    "bin",
+    "obj",
+    ".git",
+    ".prepr-cache",
+    "prepR.Tests"
+  ],
+  "verbosity": "normal",
+  "highSeverityThreshold": 50,
+  "mediumSeverityThreshold": 25,
+  "maxDuplicates": null,
+  "maxFileLines": {
+    "*": 200
+  }
+}
