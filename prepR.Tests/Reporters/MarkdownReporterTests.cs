@@ -21,7 +21,7 @@ public class MarkdownReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("# prepr — Duplicate Block Report", output);
+        Assert.Contains("# prepr report", output);
     }
 
     [Fact]

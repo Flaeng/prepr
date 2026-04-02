@@ -9,20 +9,14 @@ public class MarkdownReporter : IReporter
         var stats = SummaryStatistics.Compute(result);
 
         writer.WriteLine($"""
-            # prepr — Duplicate Block Report
+            # prepr report
 
             - **Files scanned:** {result.TotalFilesScanned}
             - **Total lines:** {result.TotalLinesScanned}
             - **Duplicate blocks found:** {stats.TotalDuplicateBlocks}
             - **Duplicated lines:** {stats.TotalDuplicatedLines}
-            """);
 
-        if (stats.MostDuplicatedFile is not null)
-        {
-            var relMost = Path.GetRelativePath(rootPath, stats.MostDuplicatedFile);
-            writer.WriteLine($"- **Most duplicated:** `{relMost}` ({stats.MostDuplicatedFileBlockCount} block(s))");
-        }
-        writer.WriteLine();
+            """);
 
         if (result.Duplicates.Count == 0)
         {

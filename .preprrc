@@ -16,7 +16,8 @@
     ".git",
     ".prepr-cache",
     "prepr.Tests",
-    "reports"
+    "reports",
+    "design"
   ],
   "verbosity": "normal",
   "highSeverityThreshold": 50,

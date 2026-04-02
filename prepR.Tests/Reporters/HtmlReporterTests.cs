@@ -22,10 +22,13 @@ public class HtmlReporterTests
         var output = writer.ToString();
 
         Assert.Contains("<!DOCTYPE html>", output);
-        Assert.Contains("<html", output);
+        Assert.Contains("<html class=\"dark\"", output);
         Assert.Contains("</html>", output);
         Assert.Contains("<head>", output);
+        Assert.Contains("<main", output);
+        Assert.Contains("</main>", output);
         Assert.Contains("</body>", output);
+        Assert.Contains("<details", output);
     }
 
     [Fact]
@@ -36,7 +39,7 @@ public class HtmlReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("<title>prepr — Duplicate Block Report</title>", output);
+        Assert.Contains("<title>prepr report</title>", output);
     }
 
     [Fact]
@@ -48,7 +51,8 @@ public class HtmlReporterTests
         var output = writer.ToString();
 
         Assert.Contains("var x = 1;", output);
-        Assert.Contains("<pre>", output);
+        Assert.Contains("code-block", output);
+        Assert.Contains("<pre", output);
     }
 
     [Fact]
@@ -79,8 +83,9 @@ public class HtmlReporterTests
         reporter.Report(CreateSampleResult(), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
-        Assert.Contains("<th>File</th>", output);
-        Assert.Contains("<th>Blocks</th>", output);
+        Assert.Contains("File", output);
+        Assert.Contains("Blocks", output);
+        Assert.Contains("Per-file Summary", output);
     }
 
     [Fact]

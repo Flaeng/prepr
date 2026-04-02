@@ -34,42 +34,7 @@ public static class RuleChecker
 
         Parallel.ForEach(filePaths, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, path =>
         {
-            try
-            {
-                IndexedLine[]? indexed = null;
-                int lineCount;
-
-                if (cache is not null && cache.TryGetCached(path, out var cachedLines, out var cachedLineCount))
-                {
-                    indexed = cachedLines;
-                    lineCount = cachedLineCount;
-                }
-                else
-                {
-                    var raw = File.ReadAllLines(path);
-                    lineCount = raw.Length;
-                    indexed = raw
-                        .Select((text, idx) => new IndexedLine(idx + 1, text))
-                        .Where(l => !string.IsNullOrWhiteSpace(l.Text))
-                        .ToArray();
-
-                    cache?.Update(path, indexed, lineCount);
-                }
-
-                Interlocked.Add(ref totalLines, lineCount);
-                fileLines[path] = indexed;
-                fileLineCounts[path] = lineCount;
-                fileMaxNestingDepths[path] = ComputeMaxNestingDepth(indexed);
-                earlyReturnViolations[path] = EarlyReturnAnalyzer.Analyze(indexed);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                Console.Error.WriteLine($"Warning: Access denied to '{path}', skipping.");
-            }
-            catch (IOException ex)
-            {
-                Console.Error.WriteLine($"Warning: Could not read '{path}': {ex.Message}");
-            }
+            ReadSingleFile(path, cache, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations);
 
             int current = Interlocked.Increment(ref filesRead);
             bar?.Update(current, "Reading files...");
@@ -78,6 +43,50 @@ public static class RuleChecker
         bar?.Complete();
 
         return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, totalLines);
+    }
+
+    private static void ReadSingleFile(string path, ScanCache? cache, ref int totalLines,
+        ConcurrentDictionary<string, IndexedLine[]> fileLines,
+        ConcurrentDictionary<string, int> fileLineCounts,
+        ConcurrentDictionary<string, (int MaxDepth, int LineNumber)> fileMaxNestingDepths,
+        ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations)
+    {
+        try
+        {
+            IndexedLine[]? indexed = null;
+            int lineCount;
+
+            if (cache is not null && cache.TryGetCached(path, out var cachedLines, out var cachedLineCount))
+            {
+                indexed = cachedLines;
+                lineCount = cachedLineCount;
+            }
+            else
+            {
+                var raw = File.ReadAllLines(path);
+                lineCount = raw.Length;
+                indexed = raw
+                    .Select((text, idx) => new IndexedLine(idx + 1, text))
+                    .Where(l => !string.IsNullOrWhiteSpace(l.Text))
+                    .ToArray();
+
+                cache?.Update(path, indexed, lineCount);
+            }
+
+            Interlocked.Add(ref totalLines, lineCount);
+            fileLines[path] = indexed;
+            fileLineCounts[path] = lineCount;
+            fileMaxNestingDepths[path] = ComputeMaxNestingDepth(indexed);
+            earlyReturnViolations[path] = EarlyReturnAnalyzer.Analyze(indexed);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"Warning: Access denied to '{path}', skipping.");
+        }
+        catch (IOException ex)
+        {
+            Console.Error.WriteLine($"Warning: Could not read '{path}': {ex.Message}");
+        }
     }
 
     private static (int MaxDepth, int LineNumber) ComputeMaxNestingDepth(IndexedLine[] lines)

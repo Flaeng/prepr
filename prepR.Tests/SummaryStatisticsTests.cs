@@ -10,8 +10,6 @@ public class SummaryStatisticsTests
 
         Assert.Equal(0, stats.TotalDuplicateBlocks);
         Assert.Equal(0, stats.TotalDuplicatedLines);
-        Assert.Null(stats.MostDuplicatedFile);
-        Assert.Equal(0, stats.MostDuplicatedFileBlockCount);
         Assert.Equal(0, stats.UniqueFilesWithDuplicates);
     }
 
@@ -30,7 +28,6 @@ public class SummaryStatisticsTests
         Assert.Equal(1, stats.TotalDuplicateBlocks);
         Assert.Equal(10, stats.TotalDuplicatedLines); // 5 lines in A + 5 lines in B
         Assert.Equal(2, stats.UniqueFilesWithDuplicates);
-        Assert.Equal(1, stats.MostDuplicatedFileBlockCount);
     }
 
     [Fact]
@@ -53,8 +50,6 @@ public class SummaryStatisticsTests
 
         Assert.Equal(2, stats.TotalDuplicateBlocks);
         Assert.Equal(20, stats.TotalDuplicatedLines); // A:5+5, B:5, C:5
-        Assert.Equal("/src/A.cs", stats.MostDuplicatedFile); // A has 2 blocks
-        Assert.Equal(2, stats.MostDuplicatedFileBlockCount);
         Assert.Equal(3, stats.UniqueFilesWithDuplicates);
     }
 

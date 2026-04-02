@@ -15,19 +15,14 @@ public class ConsoleReporter : IReporter
 
         if (options.Verbosity == Verbosity.Quiet)
         {
-            PrintQuiet(stats, rootPath);
+            PrintQuiet(stats);
             return;
         }
 
         Console.WriteLine();
-        WriteLine("prepr — Duplicate Block Report", ConsoleColor.White);
+        WriteLine("prepr report", ConsoleColor.White);
         WriteLine($"Scanned: {result.TotalFilesScanned} files, {result.TotalLinesScanned} total lines", ConsoleColor.Gray);
         WriteLine($"Found:   {stats.TotalDuplicateBlocks} duplicate block(s), {stats.TotalDuplicatedLines} duplicated line(s)", ConsoleColor.Gray);
-        if (stats.MostDuplicatedFile is not null)
-        {
-            var relMost = Path.GetRelativePath(rootPath, stats.MostDuplicatedFile);
-            WriteLine($"Most duplicated: {relMost} ({stats.MostDuplicatedFileBlockCount} block(s))", ConsoleColor.Gray);
-        }
         Console.WriteLine(new string('─', 60));
 
         if (result.Duplicates.Count == 0)
@@ -219,17 +214,15 @@ public class ConsoleReporter : IReporter
         }
     }
 
-    private static void PrintQuiet(SummaryStatistics stats, string rootPath)
+    private static void PrintQuiet(SummaryStatistics stats)
     {
         if (stats.TotalDuplicateBlocks == 0)
         {
             Console.WriteLine("No duplicates found.");
             return;
         }
-        var most = stats.MostDuplicatedFile is not null
-            ? $", most duplicated: {Path.GetRelativePath(rootPath, stats.MostDuplicatedFile)}"
-            : "";
-        Console.WriteLine($"{stats.TotalDuplicateBlocks} duplicate block(s), {stats.TotalDuplicatedLines} duplicated line(s){most}");
+        
+        Console.WriteLine($"{stats.TotalDuplicateBlocks} duplicate block(s), {stats.TotalDuplicatedLines} duplicated line(s)");
     }
 
     private static string Truncate(string text, int maxLength)
