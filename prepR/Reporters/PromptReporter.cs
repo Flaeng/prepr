@@ -84,6 +84,54 @@ public class PromptReporter : IReporter
 
             writer.WriteLine();
         }
+
+        // Files exceeding indentation limit
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        if (overIndented.Count > 0)
+        {
+            writer.WriteLine("""
+                ---
+            
+                ## Files Exceeding Indentation Limit
+            
+                The following files exceed their maximum allowed nesting depth. Consider refactoring to reduce complexity:
+            
+                """);
+
+            foreach (var v in overIndented)
+            {
+                var rel = Path.GetRelativePath(rootPath, v.FilePath);
+                writer.WriteLine($"- `{rel}` \u2014 depth {v.MaxDepth} at line {v.LineNumber} (limit: {v.Limit})");
+            }
+
+            writer.WriteLine();
+        }
+
+        // Early return violations
+        var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
+        if (earlyReturnViolations.Count > 0)
+        {
+            writer.WriteLine("""
+                ---
+            
+                ## Early Return Opportunities
+            
+                The following files contain else blocks that could be replaced with guard clauses (early returns). Invert the condition and return early to reduce nesting:
+            
+                """);
+
+            foreach (var file in earlyReturnViolations)
+            {
+                var rel = Path.GetRelativePath(rootPath, file.FilePath);
+                writer.WriteLine($"### `{rel}`");
+                writer.WriteLine();
+                foreach (var v in file.Violations)
+                {
+                    writer.WriteLine($"- Line {v.LineNumber}: {v.Description}");
+                }
+                writer.WriteLine();
+            }
+        }
     }
 
     private static void WriteDuplications(ScanResult result, string rootPath, TextWriter writer)

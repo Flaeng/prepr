@@ -17,7 +17,9 @@ var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks ac
     QuietOption,
     MaxDuplicatesOption,
     CacheOption,
-    MaxFileLinesOption
+    MaxFileLinesOption,
+    MaxIndentationOption,
+    EarlyReturnOption
 };
 
 rootCommand.SetAction((ParseResult parse) =>
@@ -79,6 +81,23 @@ rootCommand.SetAction((ParseResult parse) =>
     if (overLimit.Count > 0)
     {
         Console.Error.WriteLine($"Error: {overLimit.Count} file(s) exceed the maximum line limit.");
+        Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if any file exceeds indentation limit
+    var overIndented = OverIndentedFileInfo.Compute(result, reportOptions, path.FullName);
+    if (overIndented.Count > 0)
+    {
+        Console.Error.WriteLine($"Error: {overIndented.Count} file(s) exceed the maximum indentation depth.");
+        Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if any early return violations found
+    var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, reportOptions);
+    if (earlyReturnViolations.Count > 0)
+    {
+        var totalViolations = earlyReturnViolations.Sum(f => f.Violations.Count);
+        Console.Error.WriteLine($"Error: {totalViolations} early return opportunity(ies) found in {earlyReturnViolations.Count} file(s).");
         Environment.ExitCode = 2;
     }
 });

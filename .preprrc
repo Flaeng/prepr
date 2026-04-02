@@ -24,5 +24,8 @@
   "maxDuplicates": null,
   "maxFileLines": {
     "*": 200
+  },
+  "maxIndentation": {
+    "*": 4
   }
 }

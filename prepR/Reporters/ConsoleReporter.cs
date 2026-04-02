@@ -77,6 +77,16 @@ public class ConsoleReporter : IReporter
         {
             WriteLineLimitRule(result, rootPath, options);
         }
+        // Files exceeding indentation limit
+        if (options.IndentationRule is not null)
+        {
+            WriteIndentationRule(result, rootPath, options);
+        }
+        // Early return violations
+        if (options.EarlyReturn)
+        {
+            WriteEarlyReturnRule(result, rootPath);
+        }
     }
 
     private static void WriteLineLimitRule(ScanResult result, string rootPath, ReportOptions options)
@@ -95,6 +105,53 @@ public class ConsoleReporter : IReporter
             Write("[!] ", ConsoleColor.Red);
             Write($"{relativePath}", ConsoleColor.Cyan);
             WriteLine($"  {v.LineCount} lines (limit: {v.Limit})", ConsoleColor.Gray);
+        }
+        Console.WriteLine();
+    }
+
+    private static void WriteIndentationRule(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        if (overIndented.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        WriteLine($"Files exceeding indentation limit ({overIndented.Count} file(s))", ConsoleColor.White);
+        Console.WriteLine();
+        foreach (var v in overIndented)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+            Write("  ", ConsoleColor.DarkGray);
+            Write("[!] ", ConsoleColor.Red);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  depth {v.MaxDepth} at line {v.LineNumber} (limit: {v.Limit})", ConsoleColor.Gray);
+        }
+        Console.WriteLine();
+    }
+
+    private static void WriteEarlyReturnRule(ScanResult result, string rootPath)
+    {
+        var violations = EarlyReturnFileInfo.Compute(result, new ReportOptions(EarlyReturn: true));
+        if (violations.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        var totalViolations = violations.Sum(f => f.Violations.Count);
+        WriteLine($"Early return opportunities ({totalViolations} in {violations.Count} file(s))", ConsoleColor.White);
+        Console.WriteLine();
+        foreach (var file in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            Write("  ", ConsoleColor.DarkGray);
+            Write("[!] ", ConsoleColor.Red);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  {file.Violations.Count} violation(s)", ConsoleColor.Gray);
+            foreach (var v in file.Violations)
+            {
+                Write("      ", ConsoleColor.DarkGray);
+                Write($"Line {v.LineNumber}: ", ConsoleColor.Yellow);
+                WriteLine(v.Description, ConsoleColor.Gray);
+            }
         }
         Console.WriteLine();
     }

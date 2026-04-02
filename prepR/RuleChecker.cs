@@ -10,18 +10,20 @@ public static class RuleChecker
         TextWriter? progressWriter = null,
         ScanCache? cache = null)
     {
-        var (fileLines, fileLineCounts, totalLines) = ReadFiles(filePaths, progressWriter, cache);
+        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, totalLines) = ReadFiles(filePaths, progressWriter, cache);
         var duplicates = DuplicateDetector.Detect(fileLines, minConsecutiveLines, progressWriter);
-        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts);
+        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations);
     }
 
-    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, int totalLines)
+    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, (int MaxDepth, int LineNumber)> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, int totalLines)
         ReadFiles(IReadOnlyList<string> filePaths,
             TextWriter? progressWriter,
             ScanCache? cache)
     {
         var fileLines = new ConcurrentDictionary<string, IndexedLine[]>();
         var fileLineCounts = new ConcurrentDictionary<string, int>();
+        var fileMaxNestingDepths = new ConcurrentDictionary<string, (int MaxDepth, int LineNumber)>();
+        var earlyReturnViolations = new ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>>();
         int totalLines = 0;
         int fileCount = filePaths.Count;
         int filesRead = 0;
@@ -57,6 +59,8 @@ public static class RuleChecker
                 Interlocked.Add(ref totalLines, lineCount);
                 fileLines[path] = indexed;
                 fileLineCounts[path] = lineCount;
+                fileMaxNestingDepths[path] = ComputeMaxNestingDepth(indexed);
+                earlyReturnViolations[path] = EarlyReturnAnalyzer.Analyze(indexed);
             }
             catch (UnauthorizedAccessException)
             {
@@ -73,6 +77,32 @@ public static class RuleChecker
 
         bar?.Complete();
 
-        return (fileLines, fileLineCounts, totalLines);
+        return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, totalLines);
+    }
+
+    private static (int MaxDepth, int LineNumber) ComputeMaxNestingDepth(IndexedLine[] lines)
+    {
+        int currentDepth = 0;
+        int maxDepth = 0;
+        int maxDepthLine = 0;
+
+        foreach (var line in lines)
+        {
+            foreach (var ch in line.Text)
+            {
+                if (ch == '{')
+                    currentDepth++;
+                else if (ch == '}')
+                    currentDepth--;
+            }
+
+            if (currentDepth > maxDepth)
+            {
+                maxDepth = currentDepth;
+                maxDepthLine = line.LineNumber;
+            }
+        }
+
+        return (maxDepth, maxDepthLine);
     }
 }

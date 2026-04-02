@@ -38,6 +38,12 @@ public class PreprConfig
     [JsonPropertyName("maxFileLines")]
     public Dictionary<string, int>? MaxFileLines { get; set; }
 
+    [JsonPropertyName("maxIndentation")]
+    public Dictionary<string, int>? MaxIndentation { get; set; }
+
+    [JsonPropertyName("earlyReturn")]
+    public bool? EarlyReturn { get; set; }
+
     public static readonly string DefaultConfigJson = JsonSerializer.Serialize(new PreprConfig
     {
         Output = ["console", "html", "md", "csv", "prompt"],
@@ -50,6 +56,8 @@ public class PreprConfig
         HighSeverityThreshold = 50,
         MediumSeverityThreshold = 25,
         MaxDuplicates = null,
-        MaxFileLines = new Dictionary<string, int> { { "*", 200 } }
+        MaxFileLines = new Dictionary<string, int> { { "*", 200 } },
+        MaxIndentation = new Dictionary<string, int> { { "*", 4 } },
+        EarlyReturn = true
     }, new JsonSerializerOptions { WriteIndented = true });
 }

@@ -61,6 +61,18 @@ public static class ConfigLoader
                         config.MaxFileLines = null;
                 }
             }
+            if (config.MaxIndentation is not null)
+            {
+                var invalidKeys = config.MaxIndentation.Where(kvp => kvp.Value <= 0).Select(kvp => kvp.Key).ToList();
+                if (invalidKeys.Count > 0)
+                {
+                    Console.Error.WriteLine($"Warning: Invalid maxIndentation values in '{configPath}' for keys: {string.Join(", ", invalidKeys)}. Values must be > 0. Removing invalid entries.");
+                    foreach (var key in invalidKeys)
+                        config.MaxIndentation.Remove(key);
+                    if (config.MaxIndentation.Count == 0)
+                        config.MaxIndentation = null;
+                }
+            }
             Console.Error.WriteLine($"Using config: {configPath}");
             return config;
         }

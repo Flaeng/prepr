@@ -5,7 +5,7 @@ public class SummaryStatisticsTests
     [Fact]
     public void Compute_NoDuplicates_ReturnsZeros()
     {
-        var result = new ScanResult([], 5, 100, new Dictionary<string, int>());
+        var result = new ScanResult([], 5, 100, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var stats = SummaryStatistics.Compute(result);
 
         Assert.Equal(0, stats.TotalDuplicateBlocks);
@@ -24,7 +24,7 @@ public class SummaryStatisticsTests
                 new FileLocation("/src/A.cs", 1, 5),
                 new FileLocation("/src/B.cs", 10, 14)
             ]);
-        var result = new ScanResult([block], 3, 100, new Dictionary<string, int>());
+        var result = new ScanResult([block], 3, 100, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var stats = SummaryStatistics.Compute(result);
 
         Assert.Equal(1, stats.TotalDuplicateBlocks);
@@ -48,7 +48,7 @@ public class SummaryStatisticsTests
                 new FileLocation("/src/A.cs", 20, 24),
                 new FileLocation("/src/C.cs", 1, 5)
             ]);
-        var result = new ScanResult([block1, block2], 3, 200, new Dictionary<string, int>());
+        var result = new ScanResult([block1, block2], 3, 200, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var stats = SummaryStatistics.Compute(result);
 
         Assert.Equal(2, stats.TotalDuplicateBlocks);
@@ -68,7 +68,7 @@ public class SummaryStatisticsTests
                 new FileLocation("/src/B.cs", 1, 5),
                 new FileLocation("/src/C.cs", 1, 5)
             ]);
-        var result = new ScanResult([block], 3, 150, new Dictionary<string, int>());
+        var result = new ScanResult([block], 3, 150, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var stats = SummaryStatistics.Compute(result);
 
         Assert.Equal(1, stats.TotalDuplicateBlocks);

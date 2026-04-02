@@ -43,6 +43,35 @@ public class CsvReporter : IReporter
                 writer.WriteLine($"{CsvEscape(relativePath)},{v.LineCount},{v.Limit}");
             }
         }
+
+        // Files exceeding indentation limit
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        if (overIndented.Count > 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("File,MaxDepth,Line,Limit");
+            foreach (var v in overIndented)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+                writer.WriteLine($"{CsvEscape(relativePath)},{v.MaxDepth},{v.LineNumber},{v.Limit}");
+            }
+        }
+
+        // Early return violations
+        var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
+        if (earlyReturnViolations.Count > 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("File,Line,Description");
+            foreach (var file in earlyReturnViolations)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+                foreach (var v in file.Violations)
+                {
+                    writer.WriteLine($"{CsvEscape(relativePath)},{v.LineNumber},{CsvEscape(v.Description)}");
+                }
+            }
+        }
     }
 
     private static string CsvEscape(string value)

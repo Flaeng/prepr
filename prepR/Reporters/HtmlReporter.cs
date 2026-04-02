@@ -79,6 +79,12 @@ public class HtmlReporter : IReporter
         // Files exceeding line limit
         WriteLineLimitRule(result, rootPath, writer, options);
 
+        // Files exceeding indentation limit
+        WriteIndentationRule(result, rootPath, writer, options);
+
+        // Early return violations
+        WriteEarlyReturnRule(result, writer, rootPath, options);
+
         writer.Write(FOOTER);
     }
 
@@ -160,6 +166,55 @@ public class HtmlReporter : IReporter
             {
                 var relativePath = WebUtility.HtmlEncode(Path.GetRelativePath(rootPath, v.FilePath));
                 writer.WriteLine($"<tr><td>{relativePath}</td><td class=\"severity-high\">{v.LineCount}</td><td>{v.Limit}</td></tr>");
+            }
+            writer.Write("""
+                    </tbody>
+                    </table>
+                """);
+        }
+    }
+
+    private static void WriteIndentationRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        if (overIndented.Count > 0)
+        {
+            writer.Write("""
+                    <h2>Files Exceeding Indentation Limit</h2>
+                    <table>
+                    <thead><tr><th>File</th><th>Max Depth</th><th>Line</th><th>Limit</th></tr></thead>
+                    <tbody>
+                """);
+            foreach (var v in overIndented)
+            {
+                var relativePath = WebUtility.HtmlEncode(Path.GetRelativePath(rootPath, v.FilePath));
+                writer.WriteLine($"<tr><td>{relativePath}</td><td class=\"severity-high\">{v.MaxDepth}</td><td>{v.LineNumber}</td><td>{v.Limit}</td></tr>");
+            }
+            writer.Write("""
+                    </tbody>
+                    </table>
+                """);
+        }
+    }
+
+    private static void WriteEarlyReturnRule(ScanResult result, TextWriter writer, string rootPath, ReportOptions options)
+    {
+        var violations = EarlyReturnFileInfo.Compute(result, options);
+        if (violations.Count > 0)
+        {
+            writer.Write("""
+                    <h2>Early Return Opportunities</h2>
+                    <table>
+                    <thead><tr><th>File</th><th>Line</th><th>Description</th></tr></thead>
+                    <tbody>
+                """);
+            foreach (var file in violations)
+            {
+                var relativePath = WebUtility.HtmlEncode(Path.GetRelativePath(rootPath, file.FilePath));
+                foreach (var v in file.Violations)
+                {
+                    writer.WriteLine($"<tr><td>{relativePath}</td><td class=\"severity-high\">{v.LineNumber}</td><td>{WebUtility.HtmlEncode(v.Description)}</td></tr>");
+                }
             }
             writer.Write("""
                     </tbody>

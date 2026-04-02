@@ -79,4 +79,14 @@ public static class CliSymbols
     {
         Description = "Maximum allowed lines per file. Files exceeding this limit are reported. Exits with code 2 if any file exceeds the limit."
     };
+
+    public static readonly Option<int?> MaxIndentationOption = new("--max-indentation")
+    {
+        Description = "Maximum allowed brace nesting depth per file. Files exceeding this limit are reported. Exits with code 2 if any file exceeds the limit."
+    };
+
+    public static readonly Option<bool?> EarlyReturnOption = new("--early-return")
+    {
+        Description = "Enable or disable the early return rule. Detects else blocks that could be replaced with guard clauses. Exits with code 2 if violations are found."
+    };
 }

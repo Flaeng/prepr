@@ -93,6 +93,12 @@ public class MarkdownReporter : IReporter
 
         // Files exceeding line limit
         WriteLineLimitRule(result, rootPath, writer, options);
+
+        // Files exceeding indentation limit
+        WriteIndentationRule(result, rootPath, writer, options);
+
+        // Early return violations
+        WriteEarlyReturnRule(result, rootPath, writer, options);
     }
 
     private static void WriteLineLimitRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
@@ -117,6 +123,59 @@ public class MarkdownReporter : IReporter
         {
             var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
             writer.WriteLine($"| `{relativePath}` | {v.LineCount} | {v.Limit} |");
+        }
+    }
+
+    private static void WriteIndentationRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
+        if (overIndented.Count <= 0)
+        {
+            return;
+        }
+
+        writer.Write("""
+
+            ---
+
+            ## Files Exceeding Indentation Limit
+
+            | File | Max Depth | Line | Limit |
+            |------|-----------|------|-------|
+            """);
+
+        foreach (var v in overIndented)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+            writer.WriteLine($"| `{relativePath}` | {v.MaxDepth} | {v.LineNumber} | {v.Limit} |");
+        }
+    }
+
+    private static void WriteEarlyReturnRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = EarlyReturnFileInfo.Compute(result, options);
+        if (violations.Count <= 0)
+        {
+            return;
+        }
+
+        writer.Write("""
+
+            ---
+
+            ## Early Return Opportunities
+
+            | File | Line | Description |
+            |------|------|-------------|
+            """);
+
+        foreach (var file in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, file.FilePath);
+            foreach (var v in file.Violations)
+            {
+                writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | {v.Description} |");
+            }
         }
     }
 
