@@ -7,7 +7,7 @@ public class TechDebtScoreTests
         int totalFiles = 10,
         int totalLines = 1000,
         Dictionary<string, int>? fileLineCounts = null,
-        Dictionary<string, (int MaxDepth, int LineNumber)>? fileMaxNestingDepths = null,
+        Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>? fileMaxNestingDepths = null,
         Dictionary<string, IReadOnlyList<EarlyReturnViolation>>? earlyReturnViolations = null)
     {
         return new ScanResult(
@@ -15,7 +15,7 @@ public class TechDebtScoreTests
             totalFiles,
             totalLines,
             fileLineCounts ?? new Dictionary<string, int>(),
-            fileMaxNestingDepths ?? new Dictionary<string, (int, int)>(),
+            fileMaxNestingDepths ?? new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
             earlyReturnViolations ?? new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
     }
 

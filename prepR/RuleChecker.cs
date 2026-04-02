@@ -15,14 +15,14 @@ public static class RuleChecker
         return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations);
     }
 
-    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, (int MaxDepth, int LineNumber)> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, int totalLines)
+    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, int totalLines)
         ReadFiles(IReadOnlyList<string> filePaths,
             TextWriter? progressWriter,
             ScanCache? cache)
     {
         var fileLines = new ConcurrentDictionary<string, IndexedLine[]>();
         var fileLineCounts = new ConcurrentDictionary<string, int>();
-        var fileMaxNestingDepths = new ConcurrentDictionary<string, (int MaxDepth, int LineNumber)>();
+        var fileMaxNestingDepths = new ConcurrentDictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>();
         var earlyReturnViolations = new ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>>();
         int totalLines = 0;
         int fileCount = filePaths.Count;
@@ -48,7 +48,7 @@ public static class RuleChecker
     private static void ReadSingleFile(string path, ScanCache? cache, ref int totalLines,
         ConcurrentDictionary<string, IndexedLine[]> fileLines,
         ConcurrentDictionary<string, int> fileLineCounts,
-        ConcurrentDictionary<string, (int MaxDepth, int LineNumber)> fileMaxNestingDepths,
+        ConcurrentDictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)> fileMaxNestingDepths,
         ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations)
     {
         try
@@ -89,29 +89,32 @@ public static class RuleChecker
         }
     }
 
-    private static (int MaxDepth, int LineNumber) ComputeMaxNestingDepth(IndexedLine[] lines)
+    private static (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths) ComputeMaxNestingDepth(IndexedLine[] lines)
     {
         int currentDepth = 0;
         int maxDepth = 0;
-        int maxDepthLine = 0;
+        var lineDepths = new List<(int LineNumber, int Depth)>(lines.Length);
 
         foreach (var line in lines)
         {
+            int lineMax = currentDepth;
             foreach (var ch in line.Text)
             {
                 if (ch == '{')
+                {
                     currentDepth++;
+                    if (currentDepth > lineMax)
+                        lineMax = currentDepth;
+                }
                 else if (ch == '}')
                     currentDepth--;
             }
 
-            if (currentDepth > maxDepth)
-            {
-                maxDepth = currentDepth;
-                maxDepthLine = line.LineNumber;
-            }
+            lineDepths.Add((line.LineNumber, lineMax));
+            if (lineMax > maxDepth)
+                maxDepth = lineMax;
         }
 
-        return (maxDepth, maxDepthLine);
+        return (maxDepth, lineDepths);
     }
 }

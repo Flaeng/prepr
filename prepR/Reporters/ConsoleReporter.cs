@@ -123,7 +123,7 @@ public class ConsoleReporter : IReporter
             Write("  ", ConsoleColor.DarkGray);
             Write("[!] ", ConsoleColor.Red);
             Write($"{relativePath}", ConsoleColor.Cyan);
-            WriteLine($"  depth {v.MaxDepth} at line {v.LineNumber} (limit: {v.Limit})", ConsoleColor.Gray);
+            WriteLine($"  depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})", ConsoleColor.Gray);
         }
         Console.WriteLine();
     }

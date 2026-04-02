@@ -138,14 +138,14 @@ public class MarkdownReporter : IReporter
 
             ## Files Exceeding Indentation Limit
 
-            | File | Max Depth | Line | Limit |
-            |------|-----------|------|-------|
+            | File | Max Depth | Lines | Limit |
+            |------|-----------|-------|-------|
             """);
 
         foreach (var v in overIndented)
         {
             var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-            writer.WriteLine($"| `{relativePath}` | {v.MaxDepth} | {v.LineNumber} | {v.Limit} |");
+            writer.WriteLine($"| `{relativePath}` | {v.MaxDepth} | {v.RangesDisplay} | {v.Limit} |");
         }
     }
 

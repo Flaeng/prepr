@@ -159,7 +159,7 @@ public class EarlyReturnFileInfoTests
         };
         var result = new ScanResult([], 1, 100,
             new Dictionary<string, int>(),
-            new Dictionary<string, (int, int)>(),
+            new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
             earlyReturns);
         var options = new ReportOptions(EarlyReturn: false);
 
@@ -179,7 +179,7 @@ public class EarlyReturnFileInfoTests
         };
         var result = new ScanResult([], 3, 300,
             new Dictionary<string, int>(),
-            new Dictionary<string, (int, int)>(),
+            new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
             earlyReturns);
         var options = new ReportOptions(EarlyReturn: true);
 
@@ -201,7 +201,7 @@ public class EarlyReturnFileInfoTests
         };
         var result = new ScanResult([], 1, 100,
             new Dictionary<string, int>(),
-            new Dictionary<string, (int, int)>(),
+            new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
             earlyReturns);
         var options = new ReportOptions(EarlyReturn: true);
 

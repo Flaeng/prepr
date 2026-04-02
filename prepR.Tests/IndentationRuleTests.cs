@@ -99,13 +99,16 @@ public class IndentationRuleTests
 
 public class OverIndentedFileInfoTests
 {
+    private static (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths) Nesting(int maxDepth, int lineNumber)
+        => (maxDepth, new List<(int, int)> { (lineNumber, maxDepth) });
+
     [Fact]
     public void Compute_NoViolations_ReturnsEmpty()
     {
-        var nestingDepths = new Dictionary<string, (int, int)>
+        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
         {
-            { "/root/a.cs", (2, 10) },
-            { "/root/b.cs", (3, 15) }
+            { "/root/a.cs", Nesting(2, 10) },
+            { "/root/b.cs", Nesting(3, 15) }
         };
         var result = new ScanResult([], 2, 80, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var rule = new IndentationRule(null, 5);
@@ -119,11 +122,11 @@ public class OverIndentedFileInfoTests
     [Fact]
     public void Compute_ReportsFilesOverLimit()
     {
-        var nestingDepths = new Dictionary<string, (int, int)>
+        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
         {
-            { "/root/a.cs", (6, 20) },
-            { "/root/b.cs", (3, 10) },
-            { "/root/c.cs", (8, 42) }
+            { "/root/a.cs", Nesting(6, 20) },
+            { "/root/b.cs", Nesting(3, 10) },
+            { "/root/c.cs", Nesting(8, 42) }
         };
         var result = new ScanResult([], 3, 380, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var rule = new IndentationRule(null, 5);
@@ -135,19 +138,19 @@ public class OverIndentedFileInfoTests
         // Sorted by max depth descending
         Assert.Equal("/root/c.cs", violations[0].FilePath);
         Assert.Equal(8, violations[0].MaxDepth);
-        Assert.Equal(42, violations[0].LineNumber);
+        Assert.Contains(violations[0].OverLimitRanges, r => r.StartLine == 42);
         Assert.Equal(5, violations[0].Limit);
         Assert.Equal("/root/a.cs", violations[1].FilePath);
-        Assert.Equal(20, violations[1].LineNumber);
+        Assert.Contains(violations[1].OverLimitRanges, r => r.StartLine == 20);
     }
 
     [Fact]
     public void Compute_PathSpecificRules_ApplyCorrectLimits()
     {
-        var nestingDepths = new Dictionary<string, (int, int)>
+        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
         {
-            { "/root/src/FolderA/file.cs", (4, 30) },
-            { "/root/src/FolderA/FolderB/file.cs", (4, 25) }
+            { "/root/src/FolderA/file.cs", Nesting(4, 30) },
+            { "/root/src/FolderA/FolderB/file.cs", Nesting(4, 25) }
         };
         var result = new ScanResult([], 2, 120, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var rules = new Dictionary<string, int>
@@ -171,7 +174,10 @@ public class OverIndentedFileInfoTests
     [Fact]
     public void Compute_FileAtExactLimit_NotReported()
     {
-        var nestingDepths = new Dictionary<string, (int, int)> { { "/root/a.cs", (5, 10) } };
+        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
+        {
+            { "/root/a.cs", Nesting(5, 10) }
+        };
         var result = new ScanResult([], 1, 100, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);

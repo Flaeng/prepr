@@ -10,7 +10,7 @@ public class PromptReporterTests
                 new FileLocation("/src/FileA.cs", 10, 14),
                 new FileLocation("/src/FileB.cs", 20, 24)
             ]);
-        return new ScanResult([block], 5, 200, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        return new ScanResult([block], 5, 200, new Dictionary<string, int>(), new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class PromptReporterTests
     {
         var reporter = new PromptReporter();
         using var writer = new StringWriter();
-        reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, (int, int)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>()), "/src", writer, new ReportOptions());
+        reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>()), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
         Assert.Contains("No duplicates found", output);

@@ -21,6 +21,6 @@ public record OverLimitFileInfo(string FilePath, int LineCount, int Limit)
 
     internal string? GetPrompt(string relativePath)
     {
-        return $"Refactor the file `{relativePath}` to reduce its line count. The file currently has {LineCount} lines, but the limit is {Limit}. Split it into smaller, more focused files or extract logic into separate classes or methods to bring it under {Limit} lines.";
+        return $"Refactor the file `{relativePath}` to reduce its line count. The file currently has {LineCount} lines, but the limit is {Limit}. Split it into smaller, more focused files or extract logic into separate classes or methods to bring it under {Limit} lines. Do not simply make the class partial to spread it across files — each new file must represent a distinct logical responsibility.";
     }
 }

@@ -49,11 +49,11 @@ public class CsvReporter : IReporter
         if (overIndented.Count > 0)
         {
             writer.WriteLine();
-            writer.WriteLine("File,MaxDepth,Line,Limit");
+            writer.WriteLine("File,MaxDepth,Lines,Limit");
             foreach (var v in overIndented)
             {
                 var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"{CsvEscape(relativePath)},{v.MaxDepth},{v.LineNumber},{v.Limit}");
+                writer.WriteLine($"{CsvEscape(relativePath)},{v.MaxDepth},{CsvEscape(v.RangesDisplay)},{v.Limit}");
             }
         }
 

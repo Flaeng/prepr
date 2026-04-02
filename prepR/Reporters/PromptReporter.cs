@@ -110,7 +110,7 @@ public class PromptReporter : IReporter
             foreach (var v in overIndented)
             {
                 var rel = Path.GetRelativePath(rootPath, v.FilePath);
-                writer.WriteLine($"- `{rel}` \u2014 depth {v.MaxDepth} at line {v.LineNumber} (limit: {v.Limit})");
+                writer.WriteLine($"- `{rel}` \u2014 depth {v.MaxDepth} at {v.RangesDisplay} (limit: {v.Limit})");
             }
 
             writer.WriteLine();
