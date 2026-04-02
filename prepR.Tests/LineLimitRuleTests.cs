@@ -112,7 +112,7 @@ public class OverLimitFileInfoTests
             { "/root/a.cs", 50 },
             { "/root/b.cs", 30 }
         };
-        var result = new ScanResult([], 2, 80, lineCounts, new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 2, 80, lineCounts, new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rule = new LineLimitRule(null, 100);
         var options = new ReportOptions(LineLimitRule: rule);
 
@@ -130,7 +130,7 @@ public class OverLimitFileInfoTests
             { "/root/b.cs", 30 },
             { "/root/c.cs", 200 }
         };
-        var result = new ScanResult([], 3, 380, lineCounts, new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 3, 380, lineCounts, new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rule = new LineLimitRule(null, 100);
         var options = new ReportOptions(LineLimitRule: rule);
 
@@ -152,7 +152,7 @@ public class OverLimitFileInfoTests
             { "/root/src/FolderA/file.cs", 60 },
             { "/root/src/FolderA/FolderB/file.cs", 60 }
         };
-        var result = new ScanResult([], 2, 120, lineCounts, new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 2, 120, lineCounts, new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rules = new Dictionary<string, int>
         {
             { "src/FolderA", 50 },
@@ -175,7 +175,7 @@ public class OverLimitFileInfoTests
     public void Compute_FileAtExactLimit_NotReported()
     {
         var lineCounts = new Dictionary<string, int> { { "/root/a.cs", 100 } };
-        var result = new ScanResult([], 1, 100, lineCounts, new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 1, 100, lineCounts, new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rule = new LineLimitRule(null, 100);
         var options = new ReportOptions(LineLimitRule: rule);
 

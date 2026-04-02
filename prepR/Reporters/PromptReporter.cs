@@ -164,6 +164,21 @@ public class PromptReporter : IReporter
             ));
         }
 
+        // Comment density violations
+        var commentDensityViolations = CommentDensityFileInfo.Compute(result, options, rootPath);
+        foreach (var v in commentDensityViolations)
+        {
+            var rel = Path.GetRelativePath(rootPath, v.FilePath);
+            var direction = v.IsBelowMin ? "under-documented" : "over-commented";
+            issues.Add(new RoadmapIssue(
+                v.Severity,
+                $"Comment density — `{rel}` ({direction})",
+                $"`{rel}` has a comment density of {v.DensityPercent:F1}% (limit: {v.LimitPercent:F1}%).",
+                null,
+                v.GetPrompt(rel) ?? ""
+            ));
+        }
+
         return issues;
     }
 }

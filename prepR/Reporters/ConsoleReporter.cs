@@ -100,6 +100,12 @@ public class ConsoleReporter : IReporter
             WriteEarlyReturnRule(result, rootPath);
         }
 
+        // Comment density violations
+        if (options.MinCommentDensityRule is not null || options.MaxCommentDensityRule is not null)
+        {
+            WriteCommentDensityRule(result, rootPath, options);
+        }
+
         // Tech Debt Score
         WriteTechDebtScore(result, rootPath, options);
     }
@@ -197,6 +203,37 @@ public class ConsoleReporter : IReporter
                 Write($"Line {v.LineNumber}: ", ConsoleColor.Yellow);
                 WriteLine(v.Description, ConsoleColor.Gray);
             }
+        }
+        Console.WriteLine();
+    }
+
+    private static void WriteCommentDensityRule(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var violations = CommentDensityFileInfo.Compute(result, options, rootPath);
+        if (violations.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        var highCD = violations.Count(v => v.Severity == Severity.High);
+        var medCD = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCD = violations.Count(v => v.Severity == Severity.Low);
+        Write($"Comment Density ({violations.Count} file(s))", ConsoleColor.White);
+        WriteSeverityCounts(highCD, medCD, lowCD);
+        Console.WriteLine();
+        foreach (var v in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+            var severityColor = v.Severity switch
+            {
+                Severity.High => ConsoleColor.Red,
+                Severity.Medium => ConsoleColor.Yellow,
+                _ => ConsoleColor.Green
+            };
+            var direction = v.IsBelowMin ? "below min" : "above max";
+            Write("  ", ConsoleColor.DarkGray);
+            Write($"[{v.Severity}] ", severityColor);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  {v.DensityPercent:F1}% ({direction}: {v.LimitPercent:F1}%)", ConsoleColor.Gray);
         }
         Console.WriteLine();
     }

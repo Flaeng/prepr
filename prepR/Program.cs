@@ -20,7 +20,9 @@ var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks ac
     MaxFileLinesOption,
     MaxIndentationOption,
     EarlyReturnOption,
-    MaxTechDebtScoreOption
+    MaxTechDebtScoreOption,
+    MinCommentDensityOption,
+    MaxCommentDensityOption
 };
 
 rootCommand.SetAction((ParseResult parse) =>
@@ -99,6 +101,14 @@ rootCommand.SetAction((ParseResult parse) =>
     {
         var totalViolations = earlyReturnViolations.Sum(f => f.Violations.Count);
         Console.Error.WriteLine($"Error: {totalViolations} early return opportunity(ies) found in {earlyReturnViolations.Count} file(s).");
+        Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if any comment density violations found
+    var commentDensityViolations = CommentDensityFileInfo.Compute(result, reportOptions, path.FullName);
+    if (commentDensityViolations.Count > 0)
+    {
+        Console.Error.WriteLine($"Error: {commentDensityViolations.Count} file(s) violate comment density limits.");
         Environment.ExitCode = 2;
     }
 

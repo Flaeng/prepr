@@ -7,16 +7,18 @@ public class TechDebtScoreTests
         int totalFiles = 10,
         int totalLines = 1000,
         Dictionary<string, int>? fileLineCounts = null,
-        Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>? fileMaxNestingDepths = null,
-        Dictionary<string, IReadOnlyList<EarlyReturnViolation>>? earlyReturnViolations = null)
+        Dictionary<string, NestingDepthInfo>? fileMaxNestingDepths = null,
+        Dictionary<string, IReadOnlyList<EarlyReturnViolation>>? earlyReturnViolations = null,
+        Dictionary<string, int>? fileCommentLineCounts = null)
     {
         return new ScanResult(
             duplicates ?? [],
             totalFiles,
             totalLines,
             fileLineCounts ?? new Dictionary<string, int>(),
-            fileMaxNestingDepths ?? new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
-            earlyReturnViolations ?? new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+            fileMaxNestingDepths ?? new Dictionary<string, NestingDepthInfo>(),
+            earlyReturnViolations ?? new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
+            fileCommentLineCounts ?? new Dictionary<string, int>());
     }
 
     [Fact]
@@ -43,9 +45,9 @@ public class TechDebtScoreTests
 
         var score = TechDebtScore.Compute(result, new ReportOptions(), "/root");
 
-        // 10 duplicated lines / 100 total = 10% density, weighted at 40% = 4.0
+        // 10 duplicated lines / 100 total = 10% density, weighted at 30% = 3.0
         Assert.Equal(10, score.DuplicationDensity);
-        Assert.Equal(4.0, score.Score);
+        Assert.Equal(3.0, score.Score);
         Assert.Equal('A', score.Grade);
     }
 
@@ -79,9 +81,9 @@ public class TechDebtScoreTests
         var options = new ReportOptions(EarlyReturn: true);
         var score = TechDebtScore.Compute(result, options, "/root");
 
-        // 2 files with violations / 10 total files = 20%, weighted at 20% = 4.0
+        // 2 files with violations / 10 total files = 20%, weighted at 15% = 3.0
         Assert.Equal(20, score.EarlyReturnDensity);
-        Assert.Equal(4.0, score.Score);
+        Assert.Equal(3.0, score.Score);
     }
 
     [Fact]
@@ -164,10 +166,10 @@ public class TechDebtScoreTests
         var options = new ReportOptions(EarlyReturn: true);
         var score = TechDebtScore.Compute(result, options, "/root");
 
-        // Duplication: 10/100 = 10% * 0.4 = 4.0
-        // Early return: 1/10 = 10% * 0.2 = 2.0
-        // Total = 6.0
-        Assert.Equal(6.0, score.Score);
+        // Duplication: 10/100 = 10% * 0.3 = 3.0
+        // Early return: 1/10 = 10% * 0.15 = 1.5
+        // Total = 4.5
+        Assert.Equal(4.5, score.Score);
         Assert.Equal('A', score.Grade);
     }
 }

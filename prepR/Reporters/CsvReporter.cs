@@ -10,6 +10,7 @@ public class CsvReporter : IReporter
         var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
         var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
         var earlyReturnViolations = EarlyReturnFileInfo.Compute(result, options);
+        var commentDensityViolations = CommentDensityFileInfo.Compute(result, options, rootPath);
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         // Summary stats
@@ -23,6 +24,7 @@ public class CsvReporter : IReporter
         writer.WriteLine($"LineLimit,{overLimit.Count(v => v.Severity == Severity.High)},{overLimit.Count(v => v.Severity == Severity.Medium)},{overLimit.Count(v => v.Severity == Severity.Low)}");
         writer.WriteLine($"Indentation,{overIndented.Count(v => v.Severity == Severity.High)},{overIndented.Count(v => v.Severity == Severity.Medium)},{overIndented.Count(v => v.Severity == Severity.Low)}");
         writer.WriteLine($"EarlyReturn,{earlyReturnViolations.Count(f => f.Severity == Severity.High)},{earlyReturnViolations.Count(f => f.Severity == Severity.Medium)},{earlyReturnViolations.Count(f => f.Severity == Severity.Low)}");
+        writer.WriteLine($"CommentDensity,{commentDensityViolations.Count(v => v.Severity == Severity.High)},{commentDensityViolations.Count(v => v.Severity == Severity.Medium)},{commentDensityViolations.Count(v => v.Severity == Severity.Low)}");
 
         // Duplicate blocks
         writer.WriteLine();
@@ -98,6 +100,19 @@ public class CsvReporter : IReporter
                 {
                     writer.WriteLine($"{CsvEscape(relativePath)},{v.LineNumber},{CsvEscape(v.Description)},{file.Severity}");
                 }
+            }
+        }
+
+        // Comment density violations
+        if (commentDensityViolations.Count > 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("File,CommentLines,TotalLines,DensityPct,LimitPct,Direction,Severity");
+            foreach (var v in commentDensityViolations)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+                var direction = v.IsBelowMin ? "BelowMin" : "AboveMax";
+                writer.WriteLine($"{CsvEscape(relativePath)},{v.CommentLines},{v.TotalLines},{v.DensityPercent.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{v.LimitPercent.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{direction},{v.Severity}");
             }
         }
 

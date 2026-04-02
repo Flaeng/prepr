@@ -56,6 +56,15 @@ public class PreprConfig
     [JsonPropertyName("techDebtWeightEarlyReturn")]
     public int? TechDebtWeightEarlyReturn { get; set; }
 
+    [JsonPropertyName("minCommentDensity")]
+    public Dictionary<string, int>? MinCommentDensity { get; set; }
+
+    [JsonPropertyName("maxCommentDensity")]
+    public Dictionary<string, int>? MaxCommentDensity { get; set; }
+
+    [JsonPropertyName("techDebtWeightCommentDensity")]
+    public int? TechDebtWeightCommentDensity { get; set; }
+
     [JsonPropertyName("maxTechDebtScore")]
     public int? MaxTechDebtScore { get; set; }
 
@@ -74,10 +83,13 @@ public class PreprConfig
         MaxFileLines = new Dictionary<string, int> { { "*", 200 } },
         MaxIndentation = new Dictionary<string, int> { { "*", 4 } },
         EarlyReturn = true,
-        TechDebtWeightDuplication = 40,
-        TechDebtWeightLineLimit = 20,
-        TechDebtWeightIndentation = 20,
-        TechDebtWeightEarlyReturn = 20,
+        TechDebtWeightDuplication = 30,
+        TechDebtWeightLineLimit = 15,
+        TechDebtWeightIndentation = 15,
+        TechDebtWeightEarlyReturn = 15,
+        MinCommentDensity = null,
+        MaxCommentDensity = null,
+        TechDebtWeightCommentDensity = 25,
         MaxTechDebtScore = null
     }, new JsonSerializerOptions { WriteIndented = true });
 }

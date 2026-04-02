@@ -6,7 +6,8 @@ public record TechDebtScore(
     double DuplicationDensity,
     double LineLimitDensity,
     double IndentationDensity,
-    double EarlyReturnDensity)
+    double EarlyReturnDensity,
+    double CommentDensityDensity)
 {
     public static TechDebtScore Compute(ScanResult result, ReportOptions options, string rootPath)
     {
@@ -44,14 +45,23 @@ public record TechDebtScore(
             earlyReturnDensity = Math.Min(100.0, (double)violations.Count / totalFiles * 100);
         }
 
+        // Comment density: % of files violating comment density limits
+        double commentDensityDensity = 0;
+        if ((options.MinCommentDensityRule is not null || options.MaxCommentDensityRule is not null) && totalFiles > 0)
+        {
+            var commentViolations = CommentDensityFileInfo.Compute(result, options, rootPath);
+            commentDensityDensity = Math.Min(100.0, (double)commentViolations.Count / totalFiles * 100);
+        }
+
         double score = options.TechDebtWeightDuplication / 100.0 * dupDensity
                      + options.TechDebtWeightLineLimit / 100.0 * lineLimitDensity
                      + options.TechDebtWeightIndentation / 100.0 * indentDensity
-                     + options.TechDebtWeightEarlyReturn / 100.0 * earlyReturnDensity;
+                     + options.TechDebtWeightEarlyReturn / 100.0 * earlyReturnDensity
+                     + options.TechDebtWeightCommentDensity / 100.0 * commentDensityDensity;
 
         score = Math.Round(Math.Min(100.0, score), 1);
 
-        return new TechDebtScore(score, GetGrade(score), dupDensity, lineLimitDensity, indentDensity, earlyReturnDensity);
+        return new TechDebtScore(score, GetGrade(score), dupDensity, lineLimitDensity, indentDensity, earlyReturnDensity, commentDensityDensity);
     }
 
     public static char GetGrade(double score) => score switch

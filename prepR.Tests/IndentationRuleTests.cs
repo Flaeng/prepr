@@ -99,18 +99,18 @@ public class IndentationRuleTests
 
 public class OverIndentedFileInfoTests
 {
-    private static (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths) Nesting(int maxDepth, int lineNumber)
-        => (maxDepth, new List<(int, int)> { (lineNumber, maxDepth) });
+    private static NestingDepthInfo Nesting(int maxDepth, int lineNumber)
+        => new(maxDepth, new List<(int, int)> { (lineNumber, maxDepth) });
 
     [Fact]
     public void Compute_NoViolations_ReturnsEmpty()
     {
-        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
+        var nestingDepths = new Dictionary<string, NestingDepthInfo>
         {
             { "/root/a.cs", Nesting(2, 10) },
             { "/root/b.cs", Nesting(3, 15) }
         };
-        var result = new ScanResult([], 2, 80, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 2, 80, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);
 
@@ -122,13 +122,13 @@ public class OverIndentedFileInfoTests
     [Fact]
     public void Compute_ReportsFilesOverLimit()
     {
-        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
+        var nestingDepths = new Dictionary<string, NestingDepthInfo>
         {
             { "/root/a.cs", Nesting(6, 20) },
             { "/root/b.cs", Nesting(3, 10) },
             { "/root/c.cs", Nesting(8, 42) }
         };
-        var result = new ScanResult([], 3, 380, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 3, 380, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);
 
@@ -147,12 +147,12 @@ public class OverIndentedFileInfoTests
     [Fact]
     public void Compute_PathSpecificRules_ApplyCorrectLimits()
     {
-        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
+        var nestingDepths = new Dictionary<string, NestingDepthInfo>
         {
             { "/root/src/FolderA/file.cs", Nesting(4, 30) },
             { "/root/src/FolderA/FolderB/file.cs", Nesting(4, 25) }
         };
-        var result = new ScanResult([], 2, 120, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 2, 120, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rules = new Dictionary<string, int>
         {
             { "src/FolderA", 3 },
@@ -174,11 +174,11 @@ public class OverIndentedFileInfoTests
     [Fact]
     public void Compute_FileAtExactLimit_NotReported()
     {
-        var nestingDepths = new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>
+        var nestingDepths = new Dictionary<string, NestingDepthInfo>
         {
             { "/root/a.cs", Nesting(5, 10) }
         };
-        var result = new ScanResult([], 1, 100, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>());
+        var result = new ScanResult([], 1, 100, new Dictionary<string, int>(), nestingDepths, new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>());
         var rule = new IndentationRule(null, 5);
         var options = new ReportOptions(IndentationRule: rule);
 

@@ -11,10 +11,13 @@ public record ReportOptions(
     LineLimitRule? LineLimitRule = null,
     IndentationRule? IndentationRule = null,
     bool EarlyReturn = false,
-    int TechDebtWeightDuplication = 40,
-    int TechDebtWeightLineLimit = 20,
-    int TechDebtWeightIndentation = 20,
-    int TechDebtWeightEarlyReturn = 20)
+    MinCommentDensityRule? MinCommentDensityRule = null,
+    MaxCommentDensityRule? MaxCommentDensityRule = null,
+    int TechDebtWeightDuplication = 30,
+    int TechDebtWeightLineLimit = 15,
+    int TechDebtWeightIndentation = 15,
+    int TechDebtWeightEarlyReturn = 15,
+    int TechDebtWeightCommentDensity = 25)
 {
     public static ReportOptions Create(
         PreprConfig config,
@@ -59,6 +62,14 @@ public record ReportOptions(
             ? parse.GetValue(EarlyReturnOption) ?? true
             : config.EarlyReturn ?? true;
 
+        var minCommentDensityCliValue = parse.GetResult(MinCommentDensityOption) is not null
+            ? parse.GetValue(MinCommentDensityOption) : null;
+        var minCommentDensityRule = new MinCommentDensityRule(config.MinCommentDensity, minCommentDensityCliValue);
+
+        var maxCommentDensityCliValue = parse.GetResult(MaxCommentDensityOption) is not null
+            ? parse.GetValue(MaxCommentDensityOption) : null;
+        var maxCommentDensityRule = new MaxCommentDensityRule(config.MaxCommentDensity, maxCommentDensityCliValue);
+
         return new ReportOptions(
             verbosity,
             config.HighSeverityThreshold ?? 50,
@@ -66,10 +77,13 @@ public record ReportOptions(
             lineLimitRule.HasRules ? lineLimitRule : null,
             indentationRule.HasRules ? indentationRule : null,
             earlyReturn,
-            config.TechDebtWeightDuplication ?? 40,
-            config.TechDebtWeightLineLimit ?? 20,
-            config.TechDebtWeightIndentation ?? 20,
-            config.TechDebtWeightEarlyReturn ?? 20);
+            minCommentDensityRule.HasRules ? minCommentDensityRule : null,
+            maxCommentDensityRule.HasRules ? maxCommentDensityRule : null,
+            config.TechDebtWeightDuplication ?? 30,
+            config.TechDebtWeightLineLimit ?? 15,
+            config.TechDebtWeightIndentation ?? 15,
+            config.TechDebtWeightEarlyReturn ?? 15,
+            config.TechDebtWeightCommentDensity ?? 25);
     }
 
     private static Verbosity ParseVerbosity(string? value) => value?.ToLowerInvariant() switch

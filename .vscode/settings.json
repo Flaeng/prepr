@@ -80,6 +80,10 @@
       "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj --filter \"[A-Za-z]+\\|[A-Za-z]+\" 2>&1 \\| Select-Object -Last [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj --filter \"[A-Za-z]+(\\|?[A-Za-z]+)*\" 2>&1 \\\\| Select-String \"[A-Za-z]+(\\|?[A-Za-z]+)*\"$/": {
+        "approve": true,
+        "matchCommandLine": true
       }
     },
     "debug.onTaskErrors": "abort"

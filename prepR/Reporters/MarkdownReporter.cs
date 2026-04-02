@@ -25,6 +25,8 @@ public class MarkdownReporter : IReporter
 
         WriteEarlyReturnRule(result, rootPath, writer, options);
 
+        WriteCommentDensityRule(result, rootPath, writer, options);
+
         WriteTechDebtScore(result, rootPath, writer, options);
     }
 
@@ -213,6 +215,41 @@ public class MarkdownReporter : IReporter
             {
                 writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | {v.Description} | {file.Severity} |");
             }
+        }
+    }
+
+    private static void WriteCommentDensityRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = CommentDensityFileInfo.Compute(result, options, rootPath);
+        var highCount = violations.Count(v => v.Severity == Severity.High);
+        var mediumCount = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCount = violations.Count(v => v.Severity == Severity.Low);
+
+        writer.Write($"""
+
+            ---
+
+            ## Comment Density {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
+
+            | File | Comments | Total Lines | Density % | Limit % | Direction | Severity |
+            |------|----------|-------------|-----------|---------|-----------|----------|
+            """);
+
+        foreach (var v in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FilePath);
+            var direction = v.IsBelowMin ? "Below min" : "Above max";
+            writer.WriteLine($"| `{relativePath}` | {v.CommentLines} | {v.TotalLines} | {v.DensityPercent:F1}% | {v.LimitPercent:F1}% | {direction} | {v.Severity} |");
         }
     }
 

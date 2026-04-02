@@ -9,17 +9,17 @@ public record OverIndentedFileInfo(string FilePath, int MaxDepth, IReadOnlyList<
 
         var violations = new List<OverIndentedFileInfo>();
 
-        foreach (var (filePath, (maxDepth, lineDepths)) in result.FileMaxNestingDepths)
+        foreach (var (filePath, nestingInfo) in result.FileMaxNestingDepths)
         {
             var limit = options.IndentationRule.GetLimit(filePath, rootPath);
-            if (limit is not null && maxDepth > limit.Value)
+            if (limit is not null && nestingInfo.MaxDepth > limit.Value)
             {
-                var ranges = ComputeOverLimitRanges(lineDepths, limit.Value);
-                int overage = maxDepth - limit.Value;
+                var ranges = ComputeOverLimitRanges(nestingInfo.LineDepths, limit.Value);
+                int overage = nestingInfo.MaxDepth - limit.Value;
                 var severity = overage >= 3 ? Severity.High
                              : overage >= 2 ? Severity.Medium
                              : Severity.Low;
-                violations.Add(new OverIndentedFileInfo(filePath, maxDepth, ranges, limit.Value, severity));
+                violations.Add(new OverIndentedFileInfo(filePath, nestingInfo.MaxDepth, ranges, limit.Value, severity));
             }
         }
 

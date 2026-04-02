@@ -49,6 +49,7 @@ public class HtmlReporter : IReporter
         HtmlRuleSectionWriter.WriteLineLimitRule(result, rootPath, writer, options);
         HtmlRuleSectionWriter.WriteIndentationRule(result, rootPath, writer, options);
         HtmlRuleSectionWriter.WriteEarlyReturnRule(result, writer, rootPath, options);
+        HtmlRuleSectionWriter.WriteCommentDensityRule(result, rootPath, writer, options);
 
         writer.Write(FOOTER);
     }

@@ -256,8 +256,9 @@ public class EarlyReturnFileInfoTests
         };
         var result = new ScanResult([], 1, 100,
             new Dictionary<string, int>(),
-            new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
-            earlyReturns);
+            new Dictionary<string, NestingDepthInfo>(),
+            earlyReturns,
+            new Dictionary<string, int>());
         var options = new ReportOptions(EarlyReturn: false);
 
         var violations = EarlyReturnFileInfo.Compute(result, options);
@@ -276,8 +277,9 @@ public class EarlyReturnFileInfoTests
         };
         var result = new ScanResult([], 3, 300,
             new Dictionary<string, int>(),
-            new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
-            earlyReturns);
+            new Dictionary<string, NestingDepthInfo>(),
+            earlyReturns,
+            new Dictionary<string, int>());
         var options = new ReportOptions(EarlyReturn: true);
 
         var violations = EarlyReturnFileInfo.Compute(result, options);
@@ -298,8 +300,9 @@ public class EarlyReturnFileInfoTests
         };
         var result = new ScanResult([], 1, 100,
             new Dictionary<string, int>(),
-            new Dictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>(),
-            earlyReturns);
+            new Dictionary<string, NestingDepthInfo>(),
+            earlyReturns,
+            new Dictionary<string, int>());
         var options = new ReportOptions(EarlyReturn: true);
 
         var violations = EarlyReturnFileInfo.Compute(result, options);

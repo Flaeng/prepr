@@ -10,20 +10,21 @@ public static class RuleChecker
         TextWriter? progressWriter = null,
         ScanCache? cache = null)
     {
-        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, totalLines) = ReadFiles(filePaths, progressWriter, cache);
+        var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, totalLines) = ReadFiles(filePaths, progressWriter, cache);
         var duplicates = DuplicateDetector.Detect(fileLines, minConsecutiveLines, progressWriter);
-        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations);
+        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts);
     }
 
-    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, int totalLines)
+    private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, NestingDepthInfo> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, IReadOnlyDictionary<string, int> fileCommentLineCounts, int totalLines)
         ReadFiles(IReadOnlyList<string> filePaths,
             TextWriter? progressWriter,
             ScanCache? cache)
     {
         var fileLines = new ConcurrentDictionary<string, IndexedLine[]>();
         var fileLineCounts = new ConcurrentDictionary<string, int>();
-        var fileMaxNestingDepths = new ConcurrentDictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)>();
+        var fileMaxNestingDepths = new ConcurrentDictionary<string, NestingDepthInfo>();
         var earlyReturnViolations = new ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>>();
+        var fileCommentLineCounts = new ConcurrentDictionary<string, int>();
         int totalLines = 0;
         int fileCount = filePaths.Count;
         int filesRead = 0;
@@ -34,7 +35,7 @@ public static class RuleChecker
 
         Parallel.ForEach(filePaths, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, path =>
         {
-            ReadSingleFile(path, cache, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations);
+            ReadSingleFile(path, cache, ref totalLines, fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts);
 
             int current = Interlocked.Increment(ref filesRead);
             bar?.Update(current, "Reading files...");
@@ -42,14 +43,15 @@ public static class RuleChecker
 
         bar?.Complete();
 
-        return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, totalLines);
+        return (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, totalLines);
     }
 
     private static void ReadSingleFile(string path, ScanCache? cache, ref int totalLines,
         ConcurrentDictionary<string, IndexedLine[]> fileLines,
         ConcurrentDictionary<string, int> fileLineCounts,
-        ConcurrentDictionary<string, (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths)> fileMaxNestingDepths,
-        ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations)
+        ConcurrentDictionary<string, NestingDepthInfo> fileMaxNestingDepths,
+        ConcurrentDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations,
+        ConcurrentDictionary<string, int> fileCommentLineCounts)
     {
         try
         {
@@ -78,6 +80,7 @@ public static class RuleChecker
             fileLineCounts[path] = lineCount;
             fileMaxNestingDepths[path] = ComputeMaxNestingDepth(indexed);
             earlyReturnViolations[path] = EarlyReturnAnalyzer.Analyze(indexed);
+            fileCommentLineCounts[path] = CountCommentLines(indexed);
         }
         catch (UnauthorizedAccessException)
         {
@@ -89,7 +92,7 @@ public static class RuleChecker
         }
     }
 
-    private static (int MaxDepth, IReadOnlyList<(int LineNumber, int Depth)> LineDepths) ComputeMaxNestingDepth(IndexedLine[] lines)
+    private static NestingDepthInfo ComputeMaxNestingDepth(IndexedLine[] lines)
     {
         int currentDepth = 0;
         int maxDepth = 0;
@@ -193,6 +196,43 @@ public static class RuleChecker
                 maxDepth = lineMax;
         }
 
-        return (maxDepth, lineDepths);
+        return new NestingDepthInfo(maxDepth, lineDepths);
+    }
+
+    internal static int CountCommentLines(IndexedLine[] lines)
+    {
+        int commentLines = 0;
+        bool inBlockComment = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Text.TrimStart();
+
+            if (inBlockComment)
+            {
+                commentLines++;
+                if (trimmed.Contains("*/"))
+                    inBlockComment = false;
+                continue;
+            }
+
+            if (trimmed.StartsWith("//"))
+            {
+                commentLines++;
+            }
+            else if (trimmed.StartsWith("/*"))
+            {
+                commentLines++;
+                if (!trimmed.Contains("*/") || trimmed.IndexOf("*/") < trimmed.IndexOf("/*") + 2)
+                {
+                    // Check if the block comment is closed on the same line
+                    var afterOpen = trimmed[(trimmed.IndexOf("/*") + 2)..];
+                    if (!afterOpen.Contains("*/"))
+                        inBlockComment = true;
+                }
+            }
+        }
+
+        return commentLines;
     }
 }
