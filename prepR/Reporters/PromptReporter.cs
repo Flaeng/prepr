@@ -22,13 +22,18 @@ public class PromptReporter : IReporter
         {
             writer.WriteLine("No issues found — no action needed.");
             var techDebtScoreEmpty = TechDebtScore.Compute(result, options, rootPath);
+            var vsEmpty = ViolationScore.Compute(result, options, rootPath);
             writer.WriteLine($"""
 
                 ---
 
                 ## Tech Debt Score
 
-                **Score:** {techDebtScoreEmpty.Score:F1}/100 — **Grade: {techDebtScoreEmpty.Grade}**
+                **Score:** {techDebtScoreEmpty.Score:F1}/100 \u2014 **Grade: {techDebtScoreEmpty.Grade}**
+
+                ## Violation Score
+
+                **Score:** {vsEmpty.RawScore} ({vsEmpty.NormalizedScore:F1}/1K lines) \u2014 **Grade: {vsEmpty.Grade}**
                 """);
             return;
         }
@@ -77,14 +82,21 @@ public class PromptReporter : IReporter
 
         // Tech Debt Score
         var techDebtScore = TechDebtScore.Compute(result, options, rootPath);
+        var vs = ViolationScore.Compute(result, options, rootPath);
         writer.WriteLine($"""
             ---
 
             ## Tech Debt Score
 
-            **Score:** {techDebtScore.Score:F1}/100 — **Grade: {techDebtScore.Grade}**
+            **Score:** {techDebtScore.Score:F1}/100 \u2014 **Grade: {techDebtScore.Grade}**
 
             This score reflects the overall technical debt density of the codebase, normalized by codebase size. A larger codebase with the same number of issues scores lower than a smaller one.
+
+            ## Violation Score
+
+            **Score:** {vs.RawScore} ({vs.NormalizedScore:F1}/1K lines) \u2014 **Grade: {vs.Grade}**
+
+            This score counts each violation with flat penalty points. It is normalized per 1,000 lines for grading.
             """);
     }
 

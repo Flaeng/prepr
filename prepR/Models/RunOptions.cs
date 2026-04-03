@@ -14,6 +14,7 @@ public class RunOptions
     public int Threshold { get; set; }
     public int? MaxDuplicates { get; set; }
     public int? MaxTechDebtScore { get; set; }
+    public int? MaxViolationScore { get; set; }
     public bool UseCache { get; set; }
 
     public static RunOptions Create(PreprConfig config, ParseResult parse)
@@ -42,6 +43,9 @@ public class RunOptions
         var maxTechDebtScore = parse.GetResult(MaxTechDebtScoreOption) is not null
             ? parse.GetValue(MaxTechDebtScoreOption) : config.MaxTechDebtScore;
 
+        var maxViolationScore = parse.GetResult(MaxViolationScoreOption) is not null
+            ? parse.GetValue(MaxViolationScoreOption) : config.MaxViolationScore;
+
         var useCache = parse.GetValue(CacheOption);
 
         return new RunOptions
@@ -54,6 +58,7 @@ public class RunOptions
             Threshold = threshold,
             MaxDuplicates = maxDuplicates,
             MaxTechDebtScore = maxTechDebtScore,
+            MaxViolationScore = maxViolationScore,
             UseCache = useCache
         };
     }

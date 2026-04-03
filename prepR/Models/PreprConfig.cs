@@ -89,6 +89,9 @@ public class PreprConfig
     [JsonPropertyName("maxTechDebtScore")]
     public int? MaxTechDebtScore { get; set; }
 
+    [JsonPropertyName("maxViolationScore")]
+    public int? MaxViolationScore { get; set; }
+
     public static readonly string DefaultConfigJson = JsonSerializer.Serialize(new PreprConfig
     {
         Output = ["console", "html", "md", "csv", "prompt"],
@@ -118,6 +121,7 @@ public class PreprConfig
         MaxMagicStrings = new Dictionary<string, int> { { "*", 2 } },
         MinMagicStringRepeat = 2,
         TechDebtWeightMagicString = 8,
-        MaxTechDebtScore = null
+        MaxTechDebtScore = null,
+        MaxViolationScore = null
     }, new JsonSerializerOptions { WriteIndented = true });
 }

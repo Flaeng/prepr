@@ -85,7 +85,7 @@
         "approve": true,
         "matchCommandLine": true
       },
-      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj 2>&1 \\| Select-String \"Failed\" \\| Select-Object -First 5$/": {
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj 2>&1 \\| Select-String \"[A-Za-z]+\" \\| Select-Object -First [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
       }

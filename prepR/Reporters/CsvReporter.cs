@@ -6,6 +6,7 @@ public class CsvReporter : IReporter
     public void Report(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         var score = TechDebtScore.Compute(result, options, rootPath);
+        var vs = ViolationScore.Compute(result, options, rootPath);
         var fileInfos = DuplicationFileInfo.ComputePerFile(result, options);
         var overLimit = OverLimitFileInfo.Compute(result, options, rootPath);
         var overIndented = OverIndentedFileInfo.Compute(result, options, rootPath);
@@ -16,8 +17,8 @@ public class CsvReporter : IReporter
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         // Summary stats
-        writer.WriteLine("FilesScanned,TotalLines,TechDebtScore,Grade");
-        writer.WriteLine($"{result.TotalFilesScanned},{result.TotalLinesScanned},{score.Score.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{score.Grade}");
+        writer.WriteLine("FilesScanned,TotalLines,TechDebtScore,Grade,ViolationScore,ViolationScoreNormalized,ViolationGrade");
+        writer.WriteLine($"{result.TotalFilesScanned},{result.TotalLinesScanned},{score.Score.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{score.Grade},{vs.RawScore},{vs.NormalizedScore.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)},{vs.Grade}");
 
         // Severity counts
         writer.WriteLine();

@@ -7,13 +7,14 @@ public class MarkdownReporter : IReporter
     public void Report(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         var score = TechDebtScore.Compute(result, options, rootPath);
+        var vs = ViolationScore.Compute(result, options, rootPath);
 
         writer.WriteLine($"""
             # prepr report
 
-            | Files scanned | Total lines | Tech Debt Score |
-            |---------------|-------------|-----------------|
-            | {result.TotalFilesScanned} | {result.TotalLinesScanned} | {score.Score:F1}/100 — Grade: {score.Grade} |
+            | Files scanned | Total lines | Tech Debt Score | Violation Score |
+            |---------------|-------------|-----------------|------------------|
+            | {result.TotalFilesScanned} | {result.TotalLinesScanned} | {score.Score:F1}/100 — Grade: {score.Grade} | {vs.RawScore} ({vs.NormalizedScore:F1}/1K lines) — Grade: {vs.Grade} |
 
             """);
 
@@ -334,6 +335,7 @@ public class MarkdownReporter : IReporter
     private static void WriteTechDebtScore(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
     {
         var score = TechDebtScore.Compute(result, options, rootPath);
+        var vs = ViolationScore.Compute(result, options, rootPath);
         writer.Write($"""
 
             ---
@@ -341,6 +343,10 @@ public class MarkdownReporter : IReporter
             ## Tech Debt Score
 
             **Score:** {score.Score:F1}/100 — **Grade: {score.Grade}**
+
+            ## Violation Score
+
+            **Score:** {vs.RawScore} ({vs.NormalizedScore:F1}/1K lines) — **Grade: {vs.Grade}**
 
             """);
     }

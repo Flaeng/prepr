@@ -21,6 +21,7 @@ var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks ac
     MaxIndentationOption,
     EarlyReturnOption,
     MaxTechDebtScoreOption,
+    MaxViolationScoreOption,
     MinCommentDensityOption,
     MaxCommentDensityOption,
     MaxMagicNumbersOption,
@@ -143,6 +144,17 @@ rootCommand.SetAction((ParseResult parse) =>
         if (techDebtScore.Score > runOptions.MaxTechDebtScore.Value)
         {
             Console.Error.WriteLine($"Error: Tech debt score {techDebtScore.Score:F1}/100 (Grade: {techDebtScore.Grade}) exceeds maximum of {runOptions.MaxTechDebtScore.Value}.");
+            Environment.ExitCode = 2;
+        }
+    }
+
+    // CI exit code: exit 2 if violation score exceeds threshold
+    if (runOptions.MaxViolationScore is not null)
+    {
+        var violationScore = ViolationScore.Compute(result, reportOptions, path.FullName);
+        if (violationScore.RawScore > runOptions.MaxViolationScore.Value)
+        {
+            Console.Error.WriteLine($"Error: Violation score {violationScore.RawScore} (Grade: {violationScore.Grade}) exceeds maximum of {runOptions.MaxViolationScore.Value}.");
             Environment.ExitCode = 2;
         }
     }

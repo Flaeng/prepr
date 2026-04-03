@@ -10,7 +10,14 @@ public class HtmlReporter : IReporter
     {
         var stats = SummaryStatistics.Compute(result);
         var techDebt = TechDebtScore.Compute(result, options, rootPath);
+        var violationScore = ViolationScore.Compute(result, options, rootPath);
         var (gradeColor, gradeBg) = techDebt.Grade switch
+        {
+            'A' or 'B' => ("text-secondary", "bg-secondary/10 border-secondary/20"),
+            'C' => ("text-orange-400", "bg-orange-500/10 border-orange-500/20"),
+            _ => ("text-error", "bg-error-container/20 border-error/20")
+        };
+        var (vsGradeColor, vsGradeBg) = violationScore.Grade switch
         {
             'A' or 'B' => ("text-secondary", "bg-secondary/10 border-secondary/20"),
             'C' => ("text-orange-400", "bg-orange-500/10 border-orange-500/20"),
@@ -27,7 +34,7 @@ public class HtmlReporter : IReporter
             <h1 class="font-headline text-4xl font-bold tracking-tight text-primary">prepr report</h1>
             </header>
             <div class="space-y-4">
-            <div class="grid grid-cols-3 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-4 md:grid-cols-4 gap-4">
             <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
             <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Files scanned</p>
             <p class="text-2xl font-headline font-bold">{result.TotalFilesScanned}</p>
@@ -39,6 +46,10 @@ public class HtmlReporter : IReporter
             <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
             <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Tech Debt Score</p>
             <p class="text-2xl font-headline font-bold {gradeColor}">{techDebt.Score:F1}/100 <span class="text-sm {gradeBg} px-2 py-0.5 rounded border">{techDebt.Grade}</span></p>
+            </div>
+            <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/10">
+            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">Violation Score</p>
+            <p class="text-2xl font-headline font-bold {vsGradeColor}">{violationScore.RawScore} <span class="text-xs text-on-surface-variant">({violationScore.NormalizedScore:F1}/1K lines)</span> <span class="text-sm {vsGradeBg} px-2 py-0.5 rounded border">{violationScore.Grade}</span></p>
             </div>
             </div>
             </div>

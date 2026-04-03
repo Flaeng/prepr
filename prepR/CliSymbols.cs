@@ -94,6 +94,11 @@ public static class CliSymbols
     {
         Description = "Maximum allowed tech debt score (0–100). Exits with code 2 if exceeded."
     };
+
+    public static readonly Option<int?> MaxViolationScoreOption = new("--max-violation-score")
+    {
+        Description = "Maximum allowed violation score (raw points). Exits with code 2 if exceeded."
+    };
     public static readonly Option<int?> MinCommentDensityOption = new("--min-comment-density")
     {
         Description = "Minimum required comment density (%). Files below this threshold are reported. Exits with code 2 if any file is below the limit."

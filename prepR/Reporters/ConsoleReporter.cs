@@ -20,6 +20,7 @@ public class ConsoleReporter : IReporter
         }
 
         var techDebt = TechDebtScore.Compute(result, options, rootPath);
+        var violationScore = ViolationScore.Compute(result, options, rootPath);
         var gradeColor = techDebt.Grade switch
         {
             'A' or 'B' => ConsoleColor.Green,
@@ -34,6 +35,15 @@ public class ConsoleReporter : IReporter
         Write($"{techDebt.Score:F1}/100", gradeColor);
         Write(" Grade: ", ConsoleColor.DarkGray);
         WriteLine($"{techDebt.Grade}", gradeColor);
+        var vsGradeColor = violationScore.Grade switch
+        {
+            'A' or 'B' => ConsoleColor.Green,
+            'C' => ConsoleColor.Yellow,
+            _ => ConsoleColor.Red
+        };
+        Write($"Violation Score: {violationScore.RawScore} ({violationScore.NormalizedScore:F1}/1K lines)", vsGradeColor);
+        Write("  Grade: ", ConsoleColor.DarkGray);
+        WriteLine($"{violationScore.Grade}", vsGradeColor);
         Console.WriteLine(new string('─', 60));
 
         if (result.Duplicates.Count == 0)
@@ -338,6 +348,18 @@ public class ConsoleReporter : IReporter
         Write($"{score.Score:F1}/100", gradeColor);
         Write("  Grade: ", ConsoleColor.White);
         WriteLine($"{score.Grade}", gradeColor);
+
+        var vs = ViolationScore.Compute(result, options, rootPath);
+        var vsGradeColor = vs.Grade switch
+        {
+            'A' or 'B' => ConsoleColor.Green,
+            'C' => ConsoleColor.Yellow,
+            _ => ConsoleColor.Red
+        };
+        Write("Violation Score: ", ConsoleColor.White);
+        Write($"{vs.RawScore} ({vs.NormalizedScore:F1}/1K lines)", vsGradeColor);
+        Write("  Grade: ", ConsoleColor.White);
+        WriteLine($"{vs.Grade}", vsGradeColor);
         Console.WriteLine();
     }
 
