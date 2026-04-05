@@ -37,7 +37,7 @@ internal static class HtmlDuplicationWriter
             var codeId = $"dup-code-{fi}";
             writer.Write($"""
                 <tr class="hover:bg-primary/5 transition-colors">
-                <td class="px-6 py-4 font-mono text-xs text-primary">{WebUtility.HtmlEncode(relativePath)}</td>
+                <td class="px-6 py-4 font-mono text-xs text-primary break-all">{WebUtility.HtmlEncode(relativePath)}</td>
                 <td class="px-6 py-4">{info.DuplicateBlockCount}</td>
                 <td class="px-6 py-4">{info.DuplicatedLineCount} lines ({info.DuplicationPercentage:F1}%)</td>
                 <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold {badgeClass}">{label}</span></td>
@@ -99,7 +99,7 @@ internal static class HtmlDuplicationWriter
             var relA = WebUtility.HtmlEncode(Path.GetRelativePath(rootPath, pair.FileA));
             var relB = WebUtility.HtmlEncode(Path.GetRelativePath(rootPath, pair.FileB));
             var codeId = $"pair-code-{pi}";
-            writer.WriteLine($"""<tr><td class="px-6 py-3 font-mono text-xs text-primary">{relA}</td><td class="px-6 py-3 font-mono text-xs text-primary">{relB}</td><td class="px-6 py-3">{pair.SharedBlocks.Count}</td><td class="px-6 py-3">{pair.SharedLineCount}</td><td class="px-6 py-3 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Show code</button></td></tr>""");
+            writer.WriteLine($"""<tr><td class="px-6 py-3 font-mono text-xs text-primary break-all">{relA}</td><td class="px-6 py-3 font-mono text-xs text-primary break-all">{relB}</td><td class="px-6 py-3">{pair.SharedBlocks.Count}</td><td class="px-6 py-3">{pair.SharedLineCount}</td><td class="px-6 py-3 text-right whitespace-nowrap"><button onclick="document.getElementById('{codeId}').classList.toggle('hidden')" class="px-2 py-1 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors" style="cursor:pointer">Show code</button></td></tr>""");
 
             writer.Write($"""<tr id="{codeId}" class="hidden"><td class="px-6 py-3" colspan="5" style="max-width:0"><div class="space-y-3">""");
             foreach (var block in pair.SharedBlocks)
