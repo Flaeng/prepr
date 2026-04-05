@@ -14,7 +14,12 @@ public static partial class RuleChecker
     {
         var (fileLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, totalLines) = ReadFiles(filePaths, progressWriter, cache, safeMagicNumbers);
         var duplicates = DuplicateDetector.Detect(fileLines, minConsecutiveLines, progressWriter);
-        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations);
+
+        var folderFileCounts = filePaths
+            .GroupBy(p => Path.GetDirectoryName(p) ?? p)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return new ScanResult(duplicates, fileLines.Count, totalLines, fileLineCounts, fileMaxNestingDepths, earlyReturnViolations, fileCommentLineCounts, magicNumberViolations, magicStringViolations, folderFileCounts);
     }
 
     private static (IReadOnlyDictionary<string, IndexedLine[]> fileLines, IReadOnlyDictionary<string, int> fileLineCounts, IReadOnlyDictionary<string, NestingDepthInfo> fileMaxNestingDepths, IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> earlyReturnViolations, IReadOnlyDictionary<string, int> fileCommentLineCounts, IReadOnlyDictionary<string, IReadOnlyList<MagicNumberViolation>> magicNumberViolations, IReadOnlyDictionary<string, IReadOnlyList<MagicStringViolation>> magicStringViolations, int totalLines)

@@ -88,6 +88,18 @@
       "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj 2>&1 \\| Select-String \"[A-Za-z]+\" \\| Select-Object -First [0-9]+$/": {
         "approve": true,
         "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj 2>&1 \\| Select-String \"Failed\\|Assert\" \\| Select-Object -First 30$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj --no-build 2>&1 \\| Select-Object -Last 30$/": {
+        "approve": true,
+        "matchCommandLine": true
+      },
+      "/^dotnet test prepr\\.tests/prepr\\.Tests\\.csproj --no-build 2>&1 \\| Select-String \"Failed \" \\| Select-Object -First 20$/": {
+        "approve": true,
+        "matchCommandLine": true
       }
     },
     "debug.onTaskErrors": "abort"

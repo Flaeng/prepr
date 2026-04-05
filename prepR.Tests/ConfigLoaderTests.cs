@@ -93,7 +93,7 @@ public class ConfigLoaderTests
         var config = ConfigLoader.LoadConfig(tree.RootPath);
 
         Assert.Equal(["console", "csv"], config.Output);
-        Assert.Equal("my-report", config.OutputFile);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tree.RootPath, "my-report")), config.OutputFile);
         Assert.Equal(7, config.Threshold);
         Assert.Equal([".cs", ".ts"], config.IncludeExtensions);
         Assert.Equal([".json"], config.ExcludeExtensions);
@@ -208,7 +208,7 @@ public class ConfigLoaderTests
 
         Assert.Equal(3, config.Threshold);
         // Defaults filled in for missing properties
-        Assert.Equal("report.prepr", config.OutputFile);
+        Assert.Equal(Path.GetFullPath(Path.Combine(tree.RootPath, "report.prepr")), config.OutputFile);
         Assert.True(config.EarlyReturn);
         Assert.NotNull(config.MaxFileLines);
         Assert.NotNull(config.MaxCommentDensity);

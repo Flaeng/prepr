@@ -9,4 +9,5 @@ public record ScanResult(
     IReadOnlyDictionary<string, IReadOnlyList<EarlyReturnViolation>> EarlyReturnViolations,
     IReadOnlyDictionary<string, int> FileCommentLineCounts,
     IReadOnlyDictionary<string, IReadOnlyList<MagicNumberViolation>> MagicNumberViolations,
-    IReadOnlyDictionary<string, IReadOnlyList<MagicStringViolation>> MagicStringViolations);
+    IReadOnlyDictionary<string, IReadOnlyList<MagicStringViolation>> MagicStringViolations,
+    IReadOnlyDictionary<string, int> FolderFileCounts);

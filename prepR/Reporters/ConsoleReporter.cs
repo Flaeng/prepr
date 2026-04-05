@@ -128,6 +128,12 @@ public class ConsoleReporter : IReporter
             WriteMagicStringRule(result, rootPath, options);
         }
 
+        // Folder file count violations
+        if (options.MaxFolderFilesRule is not null)
+        {
+            WriteFolderFilesRule(result, rootPath, options);
+        }
+
         // Tech Debt Score
         WriteTechDebtScore(result, rootPath, options);
     }
@@ -330,6 +336,36 @@ public class ConsoleReporter : IReporter
                 Write($"Line {v.LineNumber}: ", ConsoleColor.Yellow);
                 WriteLine($"\"{v.Value}\"", ConsoleColor.Gray);
             }
+        }
+        Console.WriteLine();
+    }
+
+    private static void WriteFolderFilesRule(ScanResult result, string rootPath, ReportOptions options)
+    {
+        var violations = OverCrowdedFolderInfo.Compute(result, options, rootPath);
+        if (violations.Count <= 0)
+            return;
+
+        Console.WriteLine(new string('\u2500', 60));
+        var highFF = violations.Count(v => v.Severity == Severity.High);
+        var medFF = violations.Count(v => v.Severity == Severity.Medium);
+        var lowFF = violations.Count(v => v.Severity == Severity.Low);
+        Write($"Folder File Count ({violations.Count} folder(s))", ConsoleColor.White);
+        WriteSeverityCounts(highFF, medFF, lowFF);
+        Console.WriteLine();
+        foreach (var v in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FolderPath);
+            var severityColor = v.Severity switch
+            {
+                Severity.High => ConsoleColor.Red,
+                Severity.Medium => ConsoleColor.Yellow,
+                _ => ConsoleColor.Green
+            };
+            Write("  ", ConsoleColor.DarkGray);
+            Write($"[{v.Severity}] ", severityColor);
+            Write($"{relativePath}", ConsoleColor.Cyan);
+            WriteLine($"  {v.FileCount} files (limit: {v.Limit})", ConsoleColor.Gray);
         }
         Console.WriteLine();
     }

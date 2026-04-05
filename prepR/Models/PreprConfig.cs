@@ -86,6 +86,12 @@ public class PreprConfig
     [JsonPropertyName("techDebtWeightMagicString")]
     public int? TechDebtWeightMagicString { get; set; }
 
+    [JsonPropertyName("maxFolderFiles")]
+    public Dictionary<string, int>? MaxFolderFiles { get; set; }
+
+    [JsonPropertyName("techDebtWeightFolderFiles")]
+    public int? TechDebtWeightFolderFiles { get; set; }
+
     [JsonPropertyName("maxTechDebtScore")]
     public int? MaxTechDebtScore { get; set; }
 
@@ -121,6 +127,8 @@ public class PreprConfig
         MaxMagicStrings = new Dictionary<string, int> { { "*", 2 } },
         MinMagicStringRepeat = 2,
         TechDebtWeightMagicString = 8,
+        MaxFolderFiles = new Dictionary<string, int> { { "*", 15 } },
+        TechDebtWeightFolderFiles = 8,
         MaxTechDebtScore = null,
         MaxViolationScore = null
     }, new JsonSerializerOptions { WriteIndented = true });

@@ -10,7 +10,7 @@ public class CsvReporterTests
                 new FileLocation("/src/FileA.cs", 10, 14),
                 new FileLocation("/src/FileB.cs", 20, 24)
             ]);
-        return new ScanResult([block], 5, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        return new ScanResult([block], 5, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class CsvReporterTests
     {
         var reporter = new CsvReporter();
         using var writer = new StringWriter();
-        reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>()), "/src", writer, new ReportOptions());
+        reporter.Report(new ScanResult([], 3, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>()), "/src", writer, new ReportOptions());
         var output = writer.ToString();
 
         Assert.Contains("FilesScanned,TotalLines,TechDebtScore,Grade", output);

@@ -5,7 +5,7 @@ public class FileDuplicationInfoTests
     [Fact]
     public void ComputePerFile_NoDuplicates_ReturnsEmpty()
     {
-        var result = new ScanResult([], 5, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        var result = new ScanResult([], 5, 100, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.Empty(infos);
@@ -25,7 +25,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathA, 1, 5),
                 new FileLocation(pathB, 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 20, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        var result = new ScanResult([block], 2, 20, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.Equal(2, infos.Count);
@@ -53,7 +53,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathA, 1, 5),
                 new FileLocation(pathB, 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 40, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        var result = new ScanResult([block], 2, 40, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.All(infos, info => Assert.Equal(Severity.Medium, info.Severity));
@@ -73,7 +73,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathA, 1, 5),
                 new FileLocation(pathB, 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        var result = new ScanResult([block], 2, 200, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.All(infos, info => Assert.Equal(Severity.Low, info.Severity));
@@ -93,7 +93,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathA, 1, 5),
                 new FileLocation(pathB, 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 20, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        var result = new ScanResult([block], 2, 20, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
 
         // With custom high threshold of 60%, 50% should be medium
         var options = new ReportOptions(HighSeverityThreshold: 60, MediumSeverityThreshold: 40);
@@ -115,7 +115,7 @@ public class FileDuplicationInfoTests
                 new FileLocation(pathA, 1, 5),
                 new FileLocation(pathB, 1, 5)
             ]);
-        var result = new ScanResult([block], 2, 110, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+        var result = new ScanResult([block], 2, 110, new Dictionary<string, int>(), new Dictionary<string, NestingDepthInfo>(), new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(), new Dictionary<string, int>(), new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(), new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var infos = DuplicationFileInfo.ComputePerFile(result, new ReportOptions());
 
         Assert.Equal(2, infos.Count);

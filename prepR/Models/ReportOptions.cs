@@ -17,13 +17,15 @@ public record ReportOptions(
     int MinMagicNumberRepeat = 2,
     MagicStringRule? MagicStringRule = null,
     int MinMagicStringRepeat = 2,
+    MaxFolderFilesRule? MaxFolderFilesRule = null,
     int TechDebtWeightDuplication = 25,
     int TechDebtWeightLineLimit = 13,
     int TechDebtWeightIndentation = 13,
     int TechDebtWeightEarlyReturn = 13,
     int TechDebtWeightCommentDensity = 20,
     int TechDebtWeightMagicNumber = 8,
-    int TechDebtWeightMagicString = 8)
+    int TechDebtWeightMagicString = 8,
+    int TechDebtWeightFolderFiles = 8)
 {
     public static ReportOptions Create(
         PreprConfig config,
@@ -84,6 +86,10 @@ public record ReportOptions(
             ? parse.GetValue(MaxMagicStringsOption) : null;
         var magicStringRule = new MagicStringRule(config.MaxMagicStrings, maxMagicStringsCliValue);
 
+        var maxFolderFilesCliValue = parse.GetResult(MaxFolderFilesOption) is not null
+            ? parse.GetValue(MaxFolderFilesOption) : null;
+        var maxFolderFilesRule = new MaxFolderFilesRule(config.MaxFolderFiles, maxFolderFilesCliValue);
+
         return new ReportOptions(
             verbosity,
             config.HighSeverityThreshold ?? 50,
@@ -97,13 +103,15 @@ public record ReportOptions(
             config.MinMagicNumberRepeat ?? 2,
             magicStringRule.HasRules ? magicStringRule : null,
             config.MinMagicStringRepeat ?? 2,
+            maxFolderFilesRule.HasRules ? maxFolderFilesRule : null,
             config.TechDebtWeightDuplication ?? 25,
             config.TechDebtWeightLineLimit ?? 13,
             config.TechDebtWeightIndentation ?? 13,
             config.TechDebtWeightEarlyReturn ?? 13,
             config.TechDebtWeightCommentDensity ?? 20,
             config.TechDebtWeightMagicNumber ?? 8,
-            config.TechDebtWeightMagicString ?? 8);
+            config.TechDebtWeightMagicString ?? 8,
+            config.TechDebtWeightFolderFiles ?? 8);
     }
 
     private static Verbosity ParseVerbosity(string? value) => value?.ToLowerInvariant() switch

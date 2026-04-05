@@ -117,4 +117,10 @@ public static class CliSymbols
     public static readonly Option<int?> MaxMagicStringsOption = new("--max-magic-strings")
     {
         Description = "Maximum allowed repeated string literal occurrences per file before flagging. Exits with code 2 if any file exceeds the limit."
-    };}
+    };
+
+    public static readonly Option<int?> MaxFolderFilesOption = new("--max-folder-files")
+    {
+        Description = "Maximum allowed files per folder. Folders exceeding this limit are reported. Exits with code 2 if any folder exceeds the limit."
+    };
+}

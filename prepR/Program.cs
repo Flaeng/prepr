@@ -25,7 +25,8 @@ var rootCommand = new RootCommand("prepr \u2014 Detect duplicated code blocks ac
     MinCommentDensityOption,
     MaxCommentDensityOption,
     MaxMagicNumbersOption,
-    MaxMagicStringsOption
+    MaxMagicStringsOption,
+    MaxFolderFilesOption
 };
 
 rootCommand.SetAction((ParseResult parse) =>
@@ -56,7 +57,7 @@ rootCommand.SetAction((ParseResult parse) =>
     var showProgress = reportOptions.Verbosity != Verbosity.Quiet && !Console.IsErrorRedirected;
     TextWriter? progressWriter = showProgress ? Console.Error : null;
 
-    var files = new FileDiscovery(path.FullName, runOptions, progressWriter).DiscoverFiles();
+    var files = new FileDiscovery(path.FullName, runOptions, progressWriter, reportOptions.Verbosity).DiscoverFiles();
 
     if (files.Count == 0)
     {
@@ -134,6 +135,14 @@ rootCommand.SetAction((ParseResult parse) =>
     {
         var totalMagicStrings = magicStringViolations.Sum(f => f.Violations.Count);
         Console.Error.WriteLine($"Error: {totalMagicStrings} magic string occurrence(s) found in {magicStringViolations.Count} file(s).");
+        Environment.ExitCode = 2;
+    }
+
+    // CI exit code: exit 2 if any folder exceeds file count limit
+    var overCrowdedFolders = OverCrowdedFolderInfo.Compute(result, reportOptions, path.FullName);
+    if (overCrowdedFolders.Count > 0)
+    {
+        Console.Error.WriteLine($"Error: {overCrowdedFolders.Count} folder(s) exceed the maximum file count limit.");
         Environment.ExitCode = 2;
     }
 

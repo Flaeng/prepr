@@ -3,7 +3,8 @@ namespace Prepr;
 internal static class BlockConsolidator
 {
     internal static List<DuplicateBlock> ConsolidateBlocks(List<DuplicateBlock> blocks,
-        IReadOnlyDictionary<string, IndexedLine[]> fileLines)
+        IReadOnlyDictionary<string, IndexedLine[]> fileLines,
+        TextWriter? progressWriter = null)
     {
         if (blocks.Count <= 1)
             return blocks;
@@ -16,18 +17,31 @@ internal static class BlockConsolidator
 
         var result = new List<DuplicateBlock>();
 
+        int groupIndex = 0;
+        int groupTotal = groups.Count;
+
+        ProgressBar? bar = (progressWriter is not null && groupTotal > 0)
+            ? new ProgressBar(progressWriter, groupTotal)
+            : null;
+
         foreach (var group in groups)
         {
             var groupBlocks = group.ToList();
             if (groupBlocks.Count <= 1)
             {
                 result.AddRange(groupBlocks);
-                continue;
+            }
+            else
+            {
+                while (TryMergeAnyPair(groupBlocks, fileLines)) ;
+                result.AddRange(groupBlocks);
             }
 
-            while (TryMergeAnyPair(groupBlocks, fileLines)) ;
-            result.AddRange(groupBlocks);
+            groupIndex++;
+            bar?.Update(groupIndex, "Consolidating blocks...");
         }
+
+        bar?.Complete();
 
         // Remove any block that is a strict subset of another block
         return RemoveSubsetBlocks(result);

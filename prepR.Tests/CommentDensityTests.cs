@@ -91,7 +91,7 @@ public class CommentDensityTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             commentCounts,
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(MinCommentDensityRule: new MinCommentDensityRule(new Dictionary<string, int> { ["*"] = 10 }, null));
 
         var violations = CommentDensityFileInfo.Compute(result, options, "/root");
@@ -112,7 +112,7 @@ public class CommentDensityTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             commentCounts,
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(MaxCommentDensityRule: new MaxCommentDensityRule(new Dictionary<string, int> { ["*"] = 50 }, null));
 
         var violations = CommentDensityFileInfo.Compute(result, options, "/root");
@@ -133,7 +133,7 @@ public class CommentDensityTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             commentCounts,
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(
             MinCommentDensityRule: new MinCommentDensityRule(new Dictionary<string, int> { ["*"] = 10 }, null),
             MaxCommentDensityRule: new MaxCommentDensityRule(new Dictionary<string, int> { ["*"] = 50 }, null));
@@ -153,7 +153,7 @@ public class CommentDensityTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             commentCounts,
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions();
 
         var violations = CommentDensityFileInfo.Compute(result, options, "/root");
@@ -171,7 +171,7 @@ public class CommentDensityTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             commentCounts,
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(MinCommentDensityRule: new MinCommentDensityRule(new Dictionary<string, int> { ["*"] = 10 }, null));
 
         var violations = CommentDensityFileInfo.Compute(result, options, "/root");

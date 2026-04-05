@@ -221,6 +221,20 @@ public class PromptReporter : IReporter
             ));
         }
 
+        // Folder file count violations
+        var overCrowdedFolders = OverCrowdedFolderInfo.Compute(result, options, rootPath);
+        foreach (var v in overCrowdedFolders)
+        {
+            var rel = Path.GetRelativePath(rootPath, v.FolderPath);
+            issues.Add(new RoadmapIssue(
+                v.Severity,
+                $"Overcrowded folder — `{rel}`",
+                $"`{rel}` contains {v.FileCount} files (limit: {v.Limit}).",
+                null,
+                v.GetPrompt(rel)
+            ));
+        }
+
         return issues;
     }
 }

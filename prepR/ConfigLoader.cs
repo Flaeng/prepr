@@ -27,6 +27,14 @@ public static class ConfigLoader
                 return JsonSerializer.Deserialize<PreprConfig>(PreprConfig.DefaultConfigJson, DeserializeOptions)!;
 
             ValidateConfig(config, configPath);
+
+            // Resolve outputFile relative to the config file's directory
+            if (config.OutputFile is not null && !Path.IsPathRooted(config.OutputFile))
+            {
+                var configDir = Path.GetDirectoryName(configPath)!;
+                config.OutputFile = Path.GetFullPath(Path.Combine(configDir, config.OutputFile));
+            }
+
             Console.Error.WriteLine($"Using config: {configPath}");
             return config;
         }

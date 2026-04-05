@@ -211,7 +211,7 @@ public class MagicNumberTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             new Dictionary<string, int>(),
             magicNumbers,
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(MagicNumberRule: new MagicNumberRule(new Dictionary<string, int> { ["*"] = 0 }, null));
 
         var violations = MagicNumberFileInfo.Compute(result, options, "/root");
@@ -237,7 +237,7 @@ public class MagicNumberTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             new Dictionary<string, int>(),
             magicNumbers,
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(MagicNumberRule: new MagicNumberRule(new Dictionary<string, int> { ["*"] = 5 }, null));
 
         var violations = MagicNumberFileInfo.Compute(result, options, "/root");
@@ -261,7 +261,7 @@ public class MagicNumberTests
             new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             new Dictionary<string, int>(),
             magicNumbers,
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions();
 
         var violations = MagicNumberFileInfo.Compute(result, options, "/root");

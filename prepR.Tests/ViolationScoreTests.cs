@@ -22,7 +22,7 @@ public class ViolationScoreTests
             earlyReturnViolations ?? new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             fileCommentLineCounts ?? new Dictionary<string, int>(),
             magicNumberViolations ?? new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            magicStringViolations ?? new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            magicStringViolations ?? new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
     }
 
     [Fact]
@@ -114,15 +114,15 @@ public class ViolationScoreTests
 
     [Theory]
     [InlineData(0, 'A')]
-    [InlineData(5, 'A')]
-    [InlineData(5.1, 'B')]
-    [InlineData(15, 'B')]
-    [InlineData(15.1, 'C')]
-    [InlineData(30, 'C')]
-    [InlineData(30.1, 'D')]
-    [InlineData(50, 'D')]
-    [InlineData(50.1, 'F')]
-    [InlineData(100, 'F')]
+    [InlineData(50, 'A')]
+    [InlineData(50.1, 'B')]
+    [InlineData(150, 'B')]
+    [InlineData(150.1, 'C')]
+    [InlineData(300, 'C')]
+    [InlineData(300.1, 'D')]
+    [InlineData(500, 'D')]
+    [InlineData(500.1, 'F')]
+    [InlineData(1000, 'F')]
     public void GetGrade_ReturnsCorrectGrade(double normalizedScore, char expected)
     {
         Assert.Equal(expected, ViolationScore.GetGrade(normalizedScore));

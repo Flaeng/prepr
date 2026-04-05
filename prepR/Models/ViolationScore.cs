@@ -10,7 +10,8 @@ public record ViolationScore(
     int EarlyReturnFileCount,
     int CommentDensityFileCount,
     int MagicNumberFileCount,
-    int MagicStringFileCount)
+    int MagicStringFileCount,
+    int FolderFilesCount)
 {
     public const int PointsPerDuplicateBlock = 5;
     public const int PointsPerEarlyReturnFile = 3;
@@ -19,6 +20,7 @@ public record ViolationScore(
     public const int PointsPerCommentDensityFile = 1;
     public const int PointsPerMagicNumberFile = 1;
     public const int PointsPerMagicStringFile = 1;
+    public const int PointsPerFolderFilesViolation = 2;
 
     public static ViolationScore Compute(ScanResult result, ReportOptions options, string rootPath)
     {
@@ -50,13 +52,18 @@ public record ViolationScore(
         if (options.MagicStringRule is not null)
             magicStrCount = MagicStringFileInfo.Compute(result, options, rootPath).Count;
 
+        int folderFilesCount = 0;
+        if (options.MaxFolderFilesRule is not null)
+            folderFilesCount = OverCrowdedFolderInfo.Compute(result, options, rootPath).Count;
+
         int raw = dupCount * PointsPerDuplicateBlock
                 + earlyReturnCount * PointsPerEarlyReturnFile
                 + lineLimitCount * PointsPerLineLimitFile
                 + indentCount * PointsPerIndentationFile
                 + commentCount * PointsPerCommentDensityFile
                 + magicNumCount * PointsPerMagicNumberFile
-                + magicStrCount * PointsPerMagicStringFile;
+                + magicStrCount * PointsPerMagicStringFile
+                + folderFilesCount * PointsPerFolderFilesViolation;
 
         double normalized = totalLines > 0
             ? Math.Round((double)raw / totalLines * 1000, 1)
@@ -64,7 +71,7 @@ public record ViolationScore(
 
         return new ViolationScore(raw, normalized, GetGrade(normalized),
             dupCount, lineLimitCount, indentCount, earlyReturnCount,
-            commentCount, magicNumCount, magicStrCount);
+            commentCount, magicNumCount, magicStrCount, folderFilesCount);
     }
 
     public static char GetGrade(double normalizedScore) => normalizedScore switch

@@ -46,11 +46,16 @@ public static class DuplicateDetector
         // Group windows that are exact matches, then merge overlapping windows into larger blocks
         var duplicateBlocks = new List<DuplicateBlock>();
 
-        foreach (var (_, windows) in windowMap)
-        {
-            if (windows.Count < 2)
-                continue;
+        var multiWindows = windowMap.Where(kv => kv.Value.Count >= 2).ToList();
+        int matchIndex = 0;
+        int matchTotal = multiWindows.Count;
 
+        ProgressBar? matchBar = (progressWriter is not null && matchTotal > 0)
+            ? new ProgressBar(progressWriter, matchTotal)
+            : null;
+
+        foreach (var (_, windows) in multiWindows)
+        {
             // Sub-group by exact content match (handle hash collisions)
             var groups = GroupByExactContent(windows, minConsecutiveLines);
 
@@ -68,14 +73,19 @@ public static class DuplicateDetector
 
                 duplicateBlocks.Add(merged);
             }
+
+            matchIndex++;
+            matchBar?.Update(matchIndex, "Processing matches...");
         }
+
+        matchBar?.Complete();
 
         // Deduplicate blocks that share the same set of locations (can happen from overlapping window groups)
         var deduped = BlockConsolidator.DeduplicateBlocks(duplicateBlocks);
 
         // Merge overlapping/adjacent blocks across different hash groups into maximal blocks,
         // then remove any block that is a subset of a larger block
-        var consolidated = BlockConsolidator.ConsolidateBlocks(deduped, fileLines);
+        var consolidated = BlockConsolidator.ConsolidateBlocks(deduped, fileLines, progressWriter);
 
         return consolidated;
     }

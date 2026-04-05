@@ -20,7 +20,7 @@ public class TechDebtScoreTests
             earlyReturnViolations ?? new Dictionary<string, IReadOnlyList<EarlyReturnViolation>>(),
             fileCommentLineCounts ?? new Dictionary<string, int>(),
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
     }
 
     [Fact]

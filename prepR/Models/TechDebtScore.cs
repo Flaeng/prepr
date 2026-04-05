@@ -9,7 +9,8 @@ public record TechDebtScore(
     double EarlyReturnDensity,
     double CommentDensityDensity,
     double MagicNumberDensity,
-    double MagicStringDensity)
+    double MagicStringDensity,
+    double FolderFilesDensity)
 {
     public static TechDebtScore Compute(ScanResult result, ReportOptions options, string rootPath)
     {
@@ -71,17 +72,26 @@ public record TechDebtScore(
             magicStringDensity = Math.Min(100.0, (double)magicStringViolations.Count / totalFiles * 100);
         }
 
+        // Folder files density: % of folders exceeding file count limit
+        double folderFilesDensity = 0;
+        if (options.MaxFolderFilesRule is not null && result.FolderFileCounts.Count > 0)
+        {
+            var overCrowded = OverCrowdedFolderInfo.Compute(result, options, rootPath);
+            folderFilesDensity = Math.Min(100.0, (double)overCrowded.Count / result.FolderFileCounts.Count * 100);
+        }
+
         double score = options.TechDebtWeightDuplication / 100.0 * dupDensity
                      + options.TechDebtWeightLineLimit / 100.0 * lineLimitDensity
                      + options.TechDebtWeightIndentation / 100.0 * indentDensity
                      + options.TechDebtWeightEarlyReturn / 100.0 * earlyReturnDensity
                      + options.TechDebtWeightCommentDensity / 100.0 * commentDensityDensity
                      + options.TechDebtWeightMagicNumber / 100.0 * magicNumberDensity
-                     + options.TechDebtWeightMagicString / 100.0 * magicStringDensity;
+                     + options.TechDebtWeightMagicString / 100.0 * magicStringDensity
+                     + options.TechDebtWeightFolderFiles / 100.0 * folderFilesDensity;
 
         score = Math.Round(Math.Min(100.0, score), 1);
 
-        return new TechDebtScore(score, GetGrade(score), dupDensity, lineLimitDensity, indentDensity, earlyReturnDensity, commentDensityDensity, magicNumberDensity, magicStringDensity);
+        return new TechDebtScore(score, GetGrade(score), dupDensity, lineLimitDensity, indentDensity, earlyReturnDensity, commentDensityDensity, magicNumberDensity, magicStringDensity, folderFilesDensity);
     }
 
     public static char GetGrade(double score) => score switch

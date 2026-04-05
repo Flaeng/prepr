@@ -32,6 +32,8 @@ public class MarkdownReporter : IReporter
 
         WriteMagicStringRule(result, rootPath, writer, options);
 
+        WriteFolderFilesRule(result, rootPath, writer, options);
+
         WriteTechDebtScore(result, rootPath, writer, options);
     }
 
@@ -329,6 +331,40 @@ public class MarkdownReporter : IReporter
             {
                 writer.WriteLine($"| `{relativePath}` | {v.LineNumber} | `\"{v.Value}\"` | {file.Severity} |");
             }
+        }
+    }
+
+    private static void WriteFolderFilesRule(ScanResult result, string rootPath, TextWriter writer, ReportOptions options)
+    {
+        var violations = OverCrowdedFolderInfo.Compute(result, options, rootPath);
+        var highCount = violations.Count(v => v.Severity == Severity.High);
+        var mediumCount = violations.Count(v => v.Severity == Severity.Medium);
+        var lowCount = violations.Count(v => v.Severity == Severity.Low);
+
+        writer.Write($"""
+
+            ---
+
+            ## Folder File Count {SeverityCounts(highCount, mediumCount, lowCount)}
+            """);
+
+        if (violations.Count == 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("No violations found.");
+            return;
+        }
+
+        writer.WriteLine("""
+
+            | Folder | Files | Limit | Severity |
+            |--------|-------|-------|----------|
+            """);
+
+        foreach (var v in violations)
+        {
+            var relativePath = Path.GetRelativePath(rootPath, v.FolderPath);
+            writer.WriteLine($"| `{relativePath}` | {v.FileCount} | {v.Limit} | {v.Severity} |");
         }
     }
 

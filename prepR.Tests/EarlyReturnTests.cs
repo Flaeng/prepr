@@ -260,7 +260,7 @@ public class EarlyReturnFileInfoTests
             earlyReturns,
             new Dictionary<string, int>(),
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(EarlyReturn: false);
 
         var violations = EarlyReturnFileInfo.Compute(result, options);
@@ -283,7 +283,7 @@ public class EarlyReturnFileInfoTests
             earlyReturns,
             new Dictionary<string, int>(),
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(EarlyReturn: true);
 
         var violations = EarlyReturnFileInfo.Compute(result, options);
@@ -308,7 +308,7 @@ public class EarlyReturnFileInfoTests
             earlyReturns,
             new Dictionary<string, int>(),
             new Dictionary<string, IReadOnlyList<MagicNumberViolation>>(),
-            new Dictionary<string, IReadOnlyList<MagicStringViolation>>());
+            new Dictionary<string, IReadOnlyList<MagicStringViolation>>(), new Dictionary<string, int>());
         var options = new ReportOptions(EarlyReturn: true);
 
         var violations = EarlyReturnFileInfo.Compute(result, options);

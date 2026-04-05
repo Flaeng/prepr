@@ -63,6 +63,7 @@ public class HtmlReporter : IReporter
         HtmlRuleSectionWriter.WriteCommentDensityRule(result, rootPath, writer, options);
         HtmlRuleSectionWriter.WriteMagicNumberRule(result, rootPath, writer, options);
         HtmlRuleSectionWriter.WriteMagicStringRule(result, rootPath, writer, options);
+        HtmlRuleSectionWriter.WriteFolderFilesRule(result, rootPath, writer, options);
 
         writer.Write(FOOTER);
     }

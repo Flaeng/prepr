@@ -14,6 +14,7 @@ public class CsvReporter : IReporter
         var commentDensityViolations = CommentDensityFileInfo.Compute(result, options, rootPath);
         var magicNumberViolations = MagicNumberFileInfo.Compute(result, options, rootPath);
         var magicStringViolations = MagicStringFileInfo.Compute(result, options, rootPath);
+        var overCrowdedFolders = OverCrowdedFolderInfo.Compute(result, options, rootPath);
         var pairs = FilePairGroup.ComputeFilePairs(result);
 
         // Summary stats
@@ -30,6 +31,7 @@ public class CsvReporter : IReporter
         writer.WriteLine($"CommentDensity,{commentDensityViolations.Count(v => v.Severity == Severity.High)},{commentDensityViolations.Count(v => v.Severity == Severity.Medium)},{commentDensityViolations.Count(v => v.Severity == Severity.Low)}");
         writer.WriteLine($"MagicNumber,{magicNumberViolations.Count(v => v.Severity == Severity.High)},{magicNumberViolations.Count(v => v.Severity == Severity.Medium)},{magicNumberViolations.Count(v => v.Severity == Severity.Low)}");
         writer.WriteLine($"MagicString,{magicStringViolations.Count(v => v.Severity == Severity.High)},{magicStringViolations.Count(v => v.Severity == Severity.Medium)},{magicStringViolations.Count(v => v.Severity == Severity.Low)}");
+        writer.WriteLine($"FolderFiles,{overCrowdedFolders.Count(v => v.Severity == Severity.High)},{overCrowdedFolders.Count(v => v.Severity == Severity.Medium)},{overCrowdedFolders.Count(v => v.Severity == Severity.Low)}");
 
         // Duplicate blocks
         writer.WriteLine();
@@ -148,6 +150,18 @@ public class CsvReporter : IReporter
                 {
                     writer.WriteLine($"{CsvEscape(relativePath)},{v.LineNumber},{CsvEscape(v.Value)},{file.Severity}");
                 }
+            }
+        }
+
+        // Folder file count violations
+        if (overCrowdedFolders.Count > 0)
+        {
+            writer.WriteLine();
+            writer.WriteLine("Folder,FileCount,Limit,Severity");
+            foreach (var v in overCrowdedFolders)
+            {
+                var relativePath = Path.GetRelativePath(rootPath, v.FolderPath);
+                writer.WriteLine($"{CsvEscape(relativePath)},{v.FileCount},{v.Limit},{v.Severity}");
             }
         }
 
